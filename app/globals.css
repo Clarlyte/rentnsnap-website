@@ -44,6 +44,48 @@
 }
 
 @layer components {
+  /* Responsive container */
+  .responsive-container {
+    @apply container mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Responsive text sizes */
+  .responsive-heading {
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl;
+  }
+
+  .responsive-subheading {
+    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl;
+  }
+
+  .responsive-body {
+    @apply text-base sm:text-lg md:text-xl;
+  }
+
+  /* Responsive spacing */
+  .responsive-padding {
+    @apply py-8 sm:py-12 md:py-16 lg:py-24 xl:py-32;
+  }
+
+  .responsive-margin {
+    @apply my-8 sm:my-12 md:my-16 lg:my-24 xl:my-32;
+  }
+
+  /* Responsive grid */
+  .responsive-grid {
+    @apply grid gap-4 sm:gap-6 md:gap-8 lg:gap-12;
+  }
+
+  /* Responsive flex */
+  .responsive-flex {
+    @apply flex flex-col sm:flex-row;
+  }
+
+  /* Responsive card */
+  .responsive-card {
+    @apply rounded-lg border border-border/40 p-4 sm:p-6 lg:p-8;
+  }
+
   .gold-gradient {
     @apply bg-gradient-to-r from-gold-400 to-gold-600 text-black;
   }

@@ -20,46 +20,46 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
+        <div className="responsive-container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
             <Camera className="h-6 w-6 text-gold-400 interactive-icon" />
-            <span className="text-xl font-bold">
+            <span className="responsive-subheading font-bold">
               Rent n' <span className="text-gold-400">Snap</span>
             </span>
           </div>
-          <nav className="hidden md:flex gap-6">
-            <Link href="#features" className="text-sm font-medium hover:text-gold-400 transition-colors">
+          <nav className="hidden md:flex gap-4 lg:gap-6">
+            <Link href="#features" className="responsive-body font-medium hover:text-gold-400 transition-colors">
               Features
             </Link>
-            <Link href="#how-it-works" className="text-sm font-medium hover:text-gold-400 transition-colors">
+            <Link href="#how-it-works" className="responsive-body font-medium hover:text-gold-400 transition-colors">
               How It Works
             </Link>
-            <Link href="#testimonials" className="text-sm font-medium hover:text-gold-400 transition-colors">
+            <Link href="#testimonials" className="responsive-body font-medium hover:text-gold-400 transition-colors">
               Testimonials
             </Link>
-            <Link href="#pricing" className="text-sm font-medium hover:text-gold-400 transition-colors">
+            <Link href="#pricing" className="responsive-body font-medium hover:text-gold-400 transition-colors">
               Pricing
             </Link>
           </nav>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon" className="md:hidden">
                   <Menu className="h-5 w-5 interactive-icon" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="bg-background border-l border-gold-700/30">
-                <div className="flex flex-col gap-6 mt-8">
-                  <Link href="#features" className="text-lg font-medium hover:text-gold-400 transition-colors">
+              <SheetContent side="right" className="bg-background border-l border-gold-700/30 w-[280px] sm:w-[320px]">
+                <div className="flex flex-col gap-4 sm:gap-6 mt-8">
+                  <Link href="#features" className="responsive-body font-medium hover:text-gold-400 transition-colors">
                     Features
                   </Link>
-                  <Link href="#how-it-works" className="text-lg font-medium hover:text-gold-400 transition-colors">
+                  <Link href="#how-it-works" className="responsive-body font-medium hover:text-gold-400 transition-colors">
                     How It Works
                   </Link>
-                  <Link href="#testimonials" className="text-lg font-medium hover:text-gold-400 transition-colors">
+                  <Link href="#testimonials" className="responsive-body font-medium hover:text-gold-400 transition-colors">
                     Testimonials
                   </Link>
-                  <Link href="#pricing" className="text-lg font-medium hover:text-gold-400 transition-colors">
+                  <Link href="#pricing" className="responsive-body font-medium hover:text-gold-400 transition-colors">
                     Pricing
                   </Link>
                   <div className="flex flex-col gap-2 mt-4">
@@ -87,16 +87,16 @@ export default function Home() {
         </div>
       </header>
       <main className="flex-1">
-        <section className="py-12 md:py-24 lg:py-32 xl:py-48 relative overflow-hidden">
+        <section className="responsive-padding relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold-900/20 via-background to-background"></div>
-          <div className="container px-4 md:px-6 relative z-10">
-            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 xl:grid-cols-2">
+          <div className="responsive-container relative z-10">
+            <div className="responsive-grid lg:grid-cols-2">
               <div className="flex flex-col justify-center space-y-4">
                 <div className="inline-flex items-center rounded-full border border-gold-500/30 bg-gold-500/10 px-3 py-1 text-sm text-gold-500 w-fit">
                   <span className="font-medium">Premium Camera Rental System</span>
                 </div>
                 <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                  <h1 className="responsive-heading font-bold tracking-tighter">
                     Streamline Your <span className="text-gold-400">Camera Rental</span> Business
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl">
@@ -141,16 +141,16 @@ export default function Home() {
         </section>
 
         <section id="features" className="bg-secondary py-12 md:py-24 lg:py-32 border-y border-gold-700/20">
-          <div className="container px-4 md:px-6">
+          <div className="responsive-container">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="inline-flex items-center rounded-full border border-gold-500/30 bg-gold-500/10 px-3 py-1 text-sm text-gold-500">
                 <span className="font-medium">Premium Features</span>
               </div>
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                <h2 className="responsive-heading font-bold tracking-tighter">
                   Powerful <span className="text-gold-400">Features</span>
                 </h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                <p className="max-w-[900px] text-muted-foreground responsive-body">
                   Everything you need to run your camera rental business efficiently
                 </p>
               </div>
@@ -211,16 +211,16 @@ export default function Home() {
         </section>
 
         <section id="how-it-works" className="py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
+          <div className="responsive-container">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="inline-flex items-center rounded-full border border-gold-500/30 bg-gold-500/10 px-3 py-1 text-sm text-gold-500">
                 <span className="font-medium">Simple Process</span>
               </div>
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                <h2 className="responsive-heading font-bold tracking-tighter">
                   How It <span className="text-gold-400">Works</span>
                 </h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                <p className="max-w-[900px] text-muted-foreground responsive-body">
                   Simple process for both rental shop owners and customers
                 </p>
               </div>
@@ -272,22 +272,18 @@ export default function Home() {
           </div>
         </section>
 
-        {/* New Testimonials Section */}
-        <section
-          id="testimonials"
-          className="bg-secondary py-12 md:py-24 lg:py-32 border-y border-gold-700/20 relative overflow-hidden"
-        >
+        <section id="testimonials" className="bg-secondary py-12 md:py-24 lg:py-32 border-y border-gold-700/20 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold-900/10 via-transparent to-transparent"></div>
-          <div className="container px-4 md:px-6 relative z-10">
+          <div className="responsive-container relative z-10">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="inline-flex items-center rounded-full border border-gold-500/30 bg-gold-500/10 px-3 py-1 text-sm text-gold-500">
                 <span className="font-medium">Client Success Stories</span>
               </div>
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                <h2 className="responsive-heading font-bold tracking-tighter">
                   What Our <span className="text-gold-400">Clients Say</span>
                 </h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                <p className="max-w-[900px] text-muted-foreground responsive-body">
                   Hear from rental shop owners who transformed their business with Rent n' Snap
                 </p>
               </div>
@@ -399,16 +395,16 @@ export default function Home() {
         </section>
 
         <section id="pricing" className="py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
+          <div className="responsive-container">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="inline-flex items-center rounded-full border border-gold-500/30 bg-gold-500/10 px-3 py-1 text-sm text-gold-500">
                 <span className="font-medium">Flexible Plans</span>
               </div>
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                <h2 className="responsive-heading font-bold tracking-tighter">
                   Pricing <span className="text-gold-400">Plans</span>
                 </h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                <p className="max-w-[900px] text-muted-foreground responsive-body">
                   Choose the plan that fits your business needs
                 </p>
               </div>
