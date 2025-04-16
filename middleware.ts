@@ -2,33 +2,39 @@ import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next()
+  const supabase = createMiddlewareClient({ req: request, res: response })
+  const { data: { session } } = await supabase.auth.getSession()
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  // Protected routes
+  const protectedRoutes = ['/dashboard']
+  const publicRoutes = ['/login', '/signup', '/auth/verify-email']
+  const isProtectedRoute = protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route))
+  const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route))
 
-  // Check auth condition
-  const isAuthRoute = req.nextUrl.pathname.startsWith("/login") || req.nextUrl.pathname.startsWith("/register")
-  const isProtectedRoute = req.nextUrl.pathname.startsWith("/dashboard")
-
-  // Redirect if user is not authenticated and trying to access protected route
   if (isProtectedRoute && !session) {
-    const redirectUrl = new URL("/", req.url)
-    return NextResponse.redirect(redirectUrl)
+    // Redirect to login if accessing protected route without session
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Redirect if user is authenticated and trying to access auth route
-  if (isAuthRoute && session) {
-    const redirectUrl = new URL("/dashboard", req.url)
-    return NextResponse.redirect(redirectUrl)
+  if (isPublicRoute && session) {
+    // Redirect to dashboard if accessing public route with session
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  return res
+  return response
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
