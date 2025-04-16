@@ -1,10 +1,9 @@
-import Navbar from "@/components/navbar"
 import { Skeleton } from "@/components/ui/skeleton"
+import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 
 export default function DashboardLoading() {
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
+    <DashboardShell>
       <div className="flex-1 p-4 md:p-8">
         <div className="container mx-auto">
           <Skeleton className="h-10 w-[250px] mb-8" />
@@ -16,6 +15,6 @@ export default function DashboardLoading() {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardShell>
   )
 }

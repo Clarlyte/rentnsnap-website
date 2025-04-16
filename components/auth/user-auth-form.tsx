@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useSupabase } from "@/components/providers/supabase-provider"
+import { useAuth } from "@/components/providers/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
@@ -27,7 +28,9 @@ type FormData = z.infer<typeof formSchema>
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { supabase } = useSupabase()
+  const { user } = useAuth()
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
 
   const form = useForm<FormData>({
@@ -37,6 +40,13 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
       password: "",
     },
   })
+
+  React.useEffect(() => {
+    if (user) {
+      const redirectTo = searchParams.get('redirectedFrom') || '/dashboard'
+      router.push(redirectTo)
+    }
+  }, [user, router, searchParams])
 
   const handleSubmit = async (data: FormData) => {
     setIsLoading(true)
@@ -55,8 +65,8 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         })
       }
 
-      router.refresh()
-      router.push("/dashboard")
+      // The auth state change will trigger the useEffect above
+      // which will handle the navigation
     } catch (error) {
       toast({
         title: "Error",

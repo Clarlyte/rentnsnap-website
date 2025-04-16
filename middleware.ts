@@ -7,19 +7,23 @@ export async function middleware(request: NextRequest) {
   const supabase = createMiddlewareClient({ req: request, res: response })
   const { data: { session } } = await supabase.auth.getSession()
 
+  // Auth routes
+  const authRoutes = ['/login', '/register', '/verify-email', '/reset-password']
+  const isAuthRoute = authRoutes.some(route => request.nextUrl.pathname.startsWith(route))
+
   // Protected routes
   const protectedRoutes = ['/dashboard']
-  const publicRoutes = ['/login', '/register', '/verify-email', '/callback']
   const isProtectedRoute = protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route))
-  const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route))
 
-  if (isProtectedRoute && !session) {
-    // Redirect to login if accessing protected route without session
-    return NextResponse.redirect(new URL('/login', request.url))
+  // If user is not signed in and trying to access a protected route
+  if (!session && isProtectedRoute) {
+    const redirectUrl = new URL('/login', request.url)
+    redirectUrl.searchParams.set('redirectedFrom', request.nextUrl.pathname)
+    return NextResponse.redirect(redirectUrl)
   }
 
-  if (isPublicRoute && session) {
-    // Redirect to dashboard if accessing public route with session
+  // If user is signed in and trying to access an auth route
+  if (session && isAuthRoute) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
