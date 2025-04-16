@@ -9,83 +9,16 @@ import {
   Shield,
   UserCheck,
   Star,
-  Menu,
   Instagram,
   Facebook,
   Twitter,
 } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Navbar } from "@/components/navbar"
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="responsive-container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Camera className="h-6 w-6 text-gold-400 interactive-icon" />
-            <span className="responsive-subheading font-bold">
-              Rent n' <span className="text-gold-400">Snap</span>
-            </span>
-          </div>
-          <nav className="hidden md:flex gap-4 lg:gap-6">
-            <Link href="#features" className="responsive-body font-medium hover:text-gold-400 transition-colors">
-              Features
-            </Link>
-            <Link href="#how-it-works" className="responsive-body font-medium hover:text-gold-400 transition-colors">
-              How It Works
-            </Link>
-            <Link href="#testimonials" className="responsive-body font-medium hover:text-gold-400 transition-colors">
-              Testimonials
-            </Link>
-            <Link href="#pricing" className="responsive-body font-medium hover:text-gold-400 transition-colors">
-              Pricing
-            </Link>
-          </nav>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="md:hidden">
-                  <Menu className="h-5 w-5 interactive-icon" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="bg-background border-l border-gold-700/30 w-[280px] sm:w-[320px]">
-                <div className="flex flex-col gap-4 sm:gap-6 mt-8">
-                  <Link href="#features" className="responsive-body font-medium hover:text-gold-400 transition-colors">
-                    Features
-                  </Link>
-                  <Link href="#how-it-works" className="responsive-body font-medium hover:text-gold-400 transition-colors">
-                    How It Works
-                  </Link>
-                  <Link href="#testimonials" className="responsive-body font-medium hover:text-gold-400 transition-colors">
-                    Testimonials
-                  </Link>
-                  <Link href="#pricing" className="responsive-body font-medium hover:text-gold-400 transition-colors">
-                    Pricing
-                  </Link>
-                  <div className="flex flex-col gap-2 mt-4">
-                    <Link href="/login">
-                      <Button variant="outline" className="w-full">
-                        Log In
-                      </Button>
-                    </Link>
-                    <Link href="/signup">
-                      <Button className="w-full gold-gradient">Sign Up</Button>
-                    </Link>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-            <Link href="/login" className="hidden md:block">
-              <Button variant="outline" className="border-gold-500/30 hover:border-gold-500/80 hover:bg-gold-500/10">
-                Log In
-              </Button>
-            </Link>
-            <Link href="/signup" className="hidden md:block">
-              <Button className="gold-gradient hover:opacity-90 transition-opacity">Sign Up</Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Navbar />
       <main className="flex-1">
         <section className="responsive-padding relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gold-900/20 via-background to-background"></div>
@@ -719,89 +652,118 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <footer className="border-t border-gold-700/30 py-12 md:py-16 bg-secondary">
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+      <footer className="border-t border-border/40 bg-background/95">
+        <div className="responsive-container py-12 md:py-16 lg:py-20">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:gap-12">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Camera className="h-6 w-6 text-gold-400 interactive-icon" />
+                <Camera className="h-6 w-6 text-gold-400" />
                 <span className="text-xl font-bold">
                   Rent n' <span className="text-gold-400">Snap</span>
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
-                Streamlining camera rentals across the Philippines with our premium management system.
+                Streamline your camera rental business with our powerful platform.
               </p>
               <div className="flex space-x-4">
-                <Facebook className="h-5 w-5 text-muted-foreground hover:text-gold-400 transition-colors cursor-pointer" />
-                <Instagram className="h-5 w-5 text-muted-foreground hover:text-gold-400 transition-colors cursor-pointer" />
-                <Twitter className="h-5 w-5 text-muted-foreground hover:text-gold-400 transition-colors cursor-pointer" />
+                <a href="#" className="text-muted-foreground hover:text-gold-400 transition-colors">
+                  <Instagram className="h-5 w-5" />
+                </a>
+                <a href="#" className="text-muted-foreground hover:text-gold-400 transition-colors">
+                  <Facebook className="h-5 w-5" />
+                </a>
+                <a href="#" className="text-muted-foreground hover:text-gold-400 transition-colors">
+                  <Twitter className="h-5 w-5" />
+                </a>
               </div>
             </div>
             <div className="space-y-4">
-              <h4 className="text-sm font-bold uppercase tracking-wider text-gold-400">Company</h4>
+              <h3 className="text-lg font-semibold">Quick Links</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="#" className="text-sm hover:text-gold-400 transition-colors">
-                    About
-                  </Link>
+                  <a href="#features" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">
+                    Features
+                  </a>
                 </li>
                 <li>
-                  <Link href="#" className="text-sm hover:text-gold-400 transition-colors">
-                    Careers
-                  </Link>
+                  <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">
+                    How It Works
+                  </a>
                 </li>
                 <li>
-                  <Link href="#" className="text-sm hover:text-gold-400 transition-colors">
-                    Contact
-                  </Link>
+                  <a href="#testimonials" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">
+                    Testimonials
+                  </a>
+                </li>
+                <li>
+                  <a href="#pricing" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">
+                    Pricing
+                  </a>
                 </li>
               </ul>
             </div>
             <div className="space-y-4">
-              <h4 className="text-sm font-bold uppercase tracking-wider text-gold-400">Help</h4>
+              <h3 className="text-lg font-semibold">Legal</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="#" className="text-sm hover:text-gold-400 transition-colors">
-                    Documentation
-                  </Link>
+                  <a href="#" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">
+                    Privacy Policy
+                  </a>
                 </li>
                 <li>
-                  <Link href="#" className="text-sm hover:text-gold-400 transition-colors">
-                    Support
-                  </Link>
+                  <a href="#" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">
+                    Terms of Service
+                  </a>
                 </li>
                 <li>
-                  <Link href="#" className="text-sm hover:text-gold-400 transition-colors">
-                    Terms
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-sm hover:text-gold-400 transition-colors">
-                    Privacy
-                  </Link>
+                  <a href="#" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">
+                    Cookie Policy
+                  </a>
                 </li>
               </ul>
             </div>
             <div className="space-y-4">
-              <h4 className="text-sm font-bold uppercase tracking-wider text-gold-400">Newsletter</h4>
-              <p className="text-sm text-muted-foreground">Subscribe to our newsletter for updates</p>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="Your email"
-                  className="flex h-10 w-full rounded-md border border-gold-700/30 bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold-400 focus-visible:ring-offset-2"
-                />
-                <Button className="gold-gradient hover:opacity-90 transition-opacity">Subscribe</Button>
-              </div>
+              <h3 className="text-lg font-semibold">Contact</h3>
+              <ul className="space-y-2">
+                <li>
+                  <a href="mailto:support@rentnsnap.com" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">
+                    support@rentnsnap.com
+                  </a>
+                </li>
+                <li>
+                  <a href="tel:+1234567890" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">
+                    +1 (234) 567-890
+                  </a>
+                </li>
+                <li className="text-sm text-muted-foreground">
+                  123 Camera Street<br />
+                  Photography City, PC 12345
+                </li>
+              </ul>
             </div>
           </div>
-          <div className="mt-8 border-t border-gold-700/30 pt-8 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Rent n' Snap. All rights reserved.
+          <div className="mt-8 pt-8 border-t border-border/40">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <p className="text-sm text-muted-foreground text-center sm:text-left">
+                © {new Date().getFullYear()} Rent n' Snap. All rights reserved.
+              </p>
+              <div className="flex items-center space-x-4">
+                <a href="#" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">
+                  Privacy
+                </a>
+                <a href="#" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">
+                  Terms
+                </a>
+                <a href="#" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">
+                  Contact
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
     </div>
   )
 }
+
 
