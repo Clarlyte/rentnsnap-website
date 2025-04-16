@@ -1,37 +1,49 @@
-import type React from "react"
-import { Inter } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
-import { SupabaseProvider } from "@/components/providers/supabase-provider"
-import { cn } from "@/lib/utils"
-import "@/app/globals.css"
+"use client"; 
 
-const inter = Inter({ subsets: ["latin"] })
+import "@/app/globals.css";
+import { Inter } from "next/font/google";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useEffect, useState } from "react";
+import type { Session } from "@supabase/auth-helpers-nextjs"; // Import Session type
+import { ThemeProvider } from "@/components/providers/theme-provider";
 
-export const metadata = {
-  title: "Next.js Boilerplate",
-  description: "A boilerplate for Next.js projects with App Router, TypeScript, Tailwind, Shadcn UI, and Supabase",
-    generator: 'v0.dev'
-}
+const inter = Inter({ subsets: ["latin"] });
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
+  const supabase = createClientComponentClient();
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+    };
+
+    getSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setSession(session);
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn("min-h-screen bg-background font-sans antialiased", inter.className)}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <SupabaseProvider>
-            {children}
-            <Toaster />
-          </SupabaseProvider>
+      <head />
+      <body className={`${inter.className} min-h-screen bg-background antialiased`}>
+        <ThemeProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
-
-
-import './globals.css'
