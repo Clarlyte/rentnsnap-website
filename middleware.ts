@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
 
   // Protected routes
   const protectedRoutes = ['/dashboard']
-  const publicRoutes = ['/login', '/signup', '/auth/verify-email']
+  const publicRoutes = ['/login', '/register', '/verify-email', '/callback']
   const isProtectedRoute = protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route))
   const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route))
 

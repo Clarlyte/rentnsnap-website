@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
 import { Icons } from "@/components/icons"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Progress } from "@/components/ui/progress"
 
 interface UserRegisterFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -19,8 +20,14 @@ const formSchema = z
     email: z.string().email({
       message: "Please enter a valid email address",
     }),
-    password: z.string().min(6, {
-      message: "Password must be at least 6 characters",
+    password: z.string().min(8, {
+      message: "Password must be at least 8 characters",
+    }).regex(/[A-Z]/, {
+      message: "Password must contain at least one uppercase letter",
+    }).regex(/[a-z]/, {
+      message: "Password must contain at least one lowercase letter",
+    }).regex(/[0-9]/, {
+      message: "Password must contain at least one number",
     }),
     confirmPassword: z.string(),
   })
@@ -35,6 +42,7 @@ export function UserRegisterForm({ className, ...props }: UserRegisterFormProps)
   const router = useRouter()
   const { supabase } = useSupabase()
   const [isLoading, setIsLoading] = React.useState<boolean>(false)
+  const [passwordStrength, setPasswordStrength] = React.useState<number>(0)
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -45,6 +53,22 @@ export function UserRegisterForm({ className, ...props }: UserRegisterFormProps)
     },
   })
 
+  const calculatePasswordStrength = (password: string) => {
+    let strength = 0
+    if (password.length >= 8) strength += 20
+    if (/[A-Z]/.test(password)) strength += 20
+    if (/[a-z]/.test(password)) strength += 20
+    if (/[0-9]/.test(password)) strength += 20
+    if (/[^A-Za-z0-9]/.test(password)) strength += 20
+    return strength
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const strength = calculatePasswordStrength(e.target.value)
+    setPasswordStrength(strength)
+    form.setValue("password", e.target.value)
+  }
+
   const handleSubmit = async (data: FormData) => {
     setIsLoading(true)
 
@@ -53,24 +77,27 @@ export function UserRegisterForm({ className, ...props }: UserRegisterFormProps)
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/callback`,
         },
       })
 
       if (error) {
-        return toast({
+        toast({
           title: "Error",
           description: error.message,
           variant: "destructive",
         })
+        return
       }
 
       toast({
-        title: "Success",
-        description: "Check your email for the confirmation link",
+        title: "Success!",
+        description: "Please check your email to confirm your account.",
+        duration: 5000,
       })
 
-      router.push("/")
+      // Redirect to verify-email page in the (auth) route group
+      router.push("/verify-email")
     } catch (error) {
       toast({
         title: "Error",
@@ -121,9 +148,17 @@ export function UserRegisterForm({ className, ...props }: UserRegisterFormProps)
                     autoComplete="new-password"
                     autoCorrect="off"
                     disabled={isLoading}
-                    {...field}
+                    onChange={handlePasswordChange}
                   />
                 </FormControl>
+                <div className="mt-2">
+                  <Progress value={passwordStrength} className="h-2" />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {passwordStrength === 0 ? "Enter a password" :
+                     passwordStrength < 40 ? "Weak" :
+                     passwordStrength < 80 ? "Medium" : "Strong"}
+                  </p>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
