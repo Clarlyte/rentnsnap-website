@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus, Search } from "lucide-react"
+import Link from "next/link"
 
 export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -15,8 +16,10 @@ export default function CustomersPage() {
   return (
     <DashboardShell>
       <DashboardHeader heading="Customers" text="Manage your customer database">
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add Customer
+        <Button asChild>
+          <Link href="/dashboard/customers/customer-data/new">
+            <Plus className="mr-2 h-4 w-4" /> Add Customer
+          </Link>
         </Button>
       </DashboardHeader>
 
