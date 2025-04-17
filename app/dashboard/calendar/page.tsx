@@ -16,7 +16,7 @@ export default function CalendarPage() {
   return (
     <DashboardShell>
       <DashboardHeader heading="Calendar" text="View and manage rental schedules">
-        <Link href="/create-rental">
+        <Link href="/dashboard/rentals/create-rental">
           <Button>
             <Plus className="mr-2 h-4 w-4" /> New Rental
           </Button>

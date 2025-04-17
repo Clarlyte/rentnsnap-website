@@ -13,14 +13,14 @@ const navItems = [
     icon: Home,
   },
   {
+    title: "Calendar",
+    href: "/dashboard/calendar",
+    icon: Calendar,
+  },
+  {
     title: "Rentals",
     href: "/dashboard/rentals",
     icon: FileText,
-  },
-  {
-    title: "Equipment",
-    href: "/dashboard/equipment",
-    icon: Camera,
   },
   {
     title: "Customers",
@@ -28,9 +28,9 @@ const navItems = [
     icon: Users,
   },
   {
-    title: "Calendar",
-    href: "/dashboard/calendar",
-    icon: Calendar,
+    title: "Equipment",
+    href: "/dashboard/equipment",
+    icon: Camera,
   },
   {
     title: "Settings",

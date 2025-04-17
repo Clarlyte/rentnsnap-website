@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
-import { Camera, ChevronRight, Clock, Download, FileText, Filter, Link, Plus, Search, User } from "lucide-react"
+import { Camera, ChevronRight, Clock, Download, FileText, Filter, Link as LucideLink, Plus, Search, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
@@ -47,6 +48,12 @@ export default function DashboardPage() {
       <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between mb-8">
         <h1 className="text-2xl font-semibold">Hello Jane,</h1>
         <div className="flex flex-col sm:flex-row gap-4">
+          <Button asChild>
+            <Link href="/dashboard/rentals/create-rental">
+              <Plus className="mr-2 h-4 w-4" />
+              New Rental
+            </Link>
+          </Button>
           <Select value={selectedProperty} onValueChange={setSelectedProperty}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Select property" />
