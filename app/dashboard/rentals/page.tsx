@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,8 @@ import { toast } from "sonner"
 export default function RentalsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [formLink, setFormLink] = useState("")
+  const [rentals, setRentals] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   const generateFormLink = () => {
     const token = Math.random().toString(36).substring(2, 15)
@@ -34,6 +36,27 @@ export default function RentalsPage() {
       duration: 5000,
     })
   }
+
+  useEffect(() => {
+    const fetchRentals = async () => {
+      try {
+        const response = await fetch('/api/rentals')
+        const data = await response.json()
+        
+        if (!response.ok) throw new Error(data.error)
+        
+        console.log('Fetched rentals:', data)
+        setRentals(data)
+      } catch (error) {
+        console.error('Error fetching rentals:', error)
+        toast.error('Failed to load rentals')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRentals()
+  }, [])
 
   return (
     <DashboardShell>
@@ -97,21 +120,21 @@ export default function RentalsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <TableRow key={i}>
+              {rentals.map((rental) => (
+                <TableRow key={rental.id}>
                   <TableCell>
-                    <Link href={`/rental/${i}`} className="text-blue-500 hover:underline">
-                      #RNT{String(i).padStart(4, "0")}
+                    <Link href={`/rental/${rental.id}`} className="text-blue-500 hover:underline">
+                      #RNT{String(rental.id).padStart(4, "0")}
                     </Link>
                   </TableCell>
-                  <TableCell>Customer {i}</TableCell>
-                  <TableCell>Canon EOS R5 + 24-70mm Lens</TableCell>
-                  <TableCell>2024-03-{i}</TableCell>
-                  <TableCell>2024-03-{i + 3}</TableCell>
+                  <TableCell>{rental.customerName}</TableCell>
+                  <TableCell>{rental.equipment}</TableCell>
+                  <TableCell>{rental.startDate}</TableCell>
+                  <TableCell>{rental.endDate}</TableCell>
                   <TableCell>
-                    <Badge variant={i % 2 === 0 ? "default" : "secondary"}>{i % 2 === 0 ? "Active" : "Pending"}</Badge>
+                    <Badge variant={rental.status === "Active" ? "default" : "secondary"}>{rental.status}</Badge>
                   </TableCell>
-                  <TableCell>₱{(1500 * i).toLocaleString()}</TableCell>
+                  <TableCell>₱{(rental.amount).toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

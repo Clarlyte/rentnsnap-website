@@ -7,32 +7,46 @@ export async function POST(request: Request) {
     const supabase = createRouteHandlerClient({ cookies })
     const body = await request.json()
 
+    console.log('Creating rental-equipment association:', body)
+
+    if (!body.rental_id || !body.equipment_id) {
+      throw new Error('Missing required fields: rental_id and equipment_id are required')
+    }
+
     // Create rental equipment association
-    const { data, error } = await supabase
+    const { data, error: insertError } = await supabase
       .from('rental_equipment')
       .insert({
         rental_id: body.rental_id,
-        equipment_id: body.equipment_id
+        equipment_id: body.equipment_id,
+        created_at: new Date().toISOString()
       })
       .select()
       .single()
 
-    if (error) throw error
+    if (insertError) {
+      console.error('Error inserting rental equipment:', insertError)
+      throw insertError
+    }
     
-    // Update equipment status to rented
+    // Update equipment status to Reserved
     const { error: updateError } = await supabase
       .from('equipment')
-      .update({ status: 'Rented' })
+      .update({ status: 'Reserved' })
       .eq('equipment_id', body.equipment_id)
 
-    if (updateError) throw updateError
-    
+    if (updateError) {
+      console.error('Error updating equipment status:', updateError)
+      throw updateError
+    }
+
+    console.log('Rental equipment association created:', data)
     return NextResponse.json(data)
 
   } catch (error) {
     console.error('Error associating equipment with rental:', error)
     return NextResponse.json(
-      { error: 'Failed to associate equipment with rental' },
+      { error: error instanceof Error ? error.message : 'Failed to associate equipment with rental' },
       { status: 500 }
     )
   }

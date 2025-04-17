@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Button } from "@/components/ui/button"
@@ -11,9 +11,44 @@ import { Plus, Copy } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
+interface RentalEvent {
+  id: string
+  customerName: string
+  equipment: string
+  startDate: Date
+  endDate: Date
+  status: string
+}
+
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [formLink, setFormLink] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [todaySchedule, setTodaySchedule] = useState<RentalEvent[]>([])
+  const [upcomingReturns, setUpcomingReturns] = useState<RentalEvent[]>([])
+  const [allRentals, setAllRentals] = useState<RentalEvent[]>([])
+
+  useEffect(() => {
+    const fetchCalendarData = async () => {
+      try {
+        const response = await fetch('/api/calendar')
+        const data = await response.json()
+        
+        if (!response.ok) throw new Error(data.error)
+        
+        setTodaySchedule(data.todaySchedule)
+        setUpcomingReturns(data.upcomingReturns)
+        setAllRentals(data.allRentals)
+      } catch (error) {
+        console.error('Error fetching calendar data:', error)
+        toast.error('Failed to load calendar data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCalendarData()
+  }, [])
 
   const generateFormLink = () => {
     const token = Math.random().toString(36).substring(2, 15)
@@ -33,6 +68,16 @@ export default function CalendarPage() {
       description: "The link has been copied to your clipboard. You can now share it with your customers.",
       duration: 5000,
     })
+  }
+
+  // Calculate days until return
+  const getDaysUntil = (date: Date) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const returnDate = new Date(date)
+    returnDate.setHours(0, 0, 0, 0)
+    const diffTime = returnDate.getTime() - today.getTime()
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
   }
 
   return (
@@ -56,7 +101,19 @@ export default function CalendarPage() {
             <CardTitle>Rental Calendar</CardTitle>
           </CardHeader>
           <CardContent>
-            <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md border" />
+            <Calendar 
+              mode="single" 
+              selected={date} 
+              onSelect={setDate} 
+              className="rounded-md border"
+              // Add selected date styling for dates with rentals
+              modifiers={{
+                booked: allRentals.map(rental => new Date(rental.startDate))
+              }}
+              modifiersStyles={{
+                booked: { backgroundColor: 'var(--primary)', color: 'white' }
+              }}
+            />
           </CardContent>
         </Card>
 
@@ -66,20 +123,28 @@ export default function CalendarPage() {
               <CardTitle>Today's Schedule</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                    <div>
-                      <p className="font-medium">Customer {i}</p>
-                      <p className="text-sm text-muted-foreground">Canon EOS R{i}</p>
-                      <p className="text-sm text-muted-foreground">{i + 1}:00 PM</p>
+              {loading ? (
+                <div className="text-center text-muted-foreground">Loading schedule...</div>
+              ) : todaySchedule.length > 0 ? (
+                <div className="space-y-4">
+                  {todaySchedule.map((rental) => (
+                    <div key={rental.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                      <div>
+                        <p className="font-medium">{rental.customerName}</p>
+                        <p className="text-sm text-muted-foreground">{rental.equipment}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(rental.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <Badge variant={rental.status === 'Reserved' ? 'default' : 'secondary'}>
+                        {rental.status}
+                      </Badge>
                     </div>
-                    <Badge variant={i === 1 ? "destructive" : i === 2 ? "default" : "secondary"}>
-                      {i === 1 ? "Overdue" : i === 2 ? "Return" : "Pickup"}
-                    </Badge>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground">No rentals scheduled for today</div>
+              )}
             </CardContent>
           </Card>
 
@@ -88,20 +153,26 @@ export default function CalendarPage() {
               <CardTitle>Upcoming Returns</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                    <div>
-                      <p className="font-medium">Customer {i}</p>
-                      <p className="text-sm text-muted-foreground">Canon EOS R{i}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Due in {i} day{i !== 1 ? "s" : ""}
-                      </p>
+              {loading ? (
+                <div className="text-center text-muted-foreground">Loading returns...</div>
+              ) : upcomingReturns.length > 0 ? (
+                <div className="space-y-4">
+                  {upcomingReturns.map((rental) => (
+                    <div key={rental.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                      <div>
+                        <p className="font-medium">{rental.customerName}</p>
+                        <p className="text-sm text-muted-foreground">{rental.equipment}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Due in {getDaysUntil(rental.endDate)} day{getDaysUntil(rental.endDate) !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                      <Badge>Active</Badge>
                     </div>
-                    <Badge>Active</Badge>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground">No upcoming returns</div>
+              )}
             </CardContent>
           </Card>
         </div>

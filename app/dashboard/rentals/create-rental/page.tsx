@@ -19,7 +19,8 @@ import { toast } from "sonner"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 
 interface CustomerFormData {
-  full_name: string
+  first_name: string
+  last_name: string
   email: string
   phone: string
   address: string
@@ -42,7 +43,8 @@ export default function CreateRentalPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const [customerData, setCustomerData] = useState<CustomerFormData>({
-    full_name: "",
+    first_name: "",
+    last_name: "",
     email: "",
     phone: "",
     address: ""
@@ -94,20 +96,52 @@ export default function CreateRentalPage() {
     try {
       setIsSubmitting(true)
 
+      // Format time string to 24-hour format
+      const formatTime = (timeStr: string) => {
+        const hour = parseInt(timeStr.replace(/[ap]m/, ''))
+        const isPM = timeStr.includes('pm')
+        const hour24 = isPM ? (hour === 12 ? 12 : hour + 12) : (hour === 12 ? 0 : hour)
+        return `${hour24.toString().padStart(2, '0')}:00:00`
+      }
+
       // 1. Create or get customer
       const customerResponse = await fetch("/api/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(customerData)
       })
+
+      if (!customerResponse.ok) {
+        const error = await customerResponse.json()
+        throw new Error(error.error || 'Failed to create customer')
+      }
+
       const { customer_id } = await customerResponse.json()
 
       // 2. Create rental record
+      const startDateTime = startDate ? new Date(startDate) : null
+      const endDateTime = endDate ? new Date(endDate) : null
+
+      if (!startDateTime || !endDateTime) {
+        throw new Error('Invalid dates')
+      }
+
+      // Set the time components
+      startDateTime.setHours(parseInt(startTime.replace(/[ap]m/, '')))
+      if (startTime.includes('pm') && !startTime.startsWith('12')) {
+        startDateTime.setHours(startDateTime.getHours() + 12)
+      }
+      
+      endDateTime.setHours(parseInt(endTime.replace(/[ap]m/, '')))
+      if (endTime.includes('pm') && !endTime.startsWith('12')) {
+        endDateTime.setHours(endDateTime.getHours() + 12)
+      }
+
       const rentalData = {
         customer_id,
-        start_date: new Date(`${startDate?.toISOString().split('T')[0]}T${startTime}`),
-        end_date: new Date(`${endDate?.toISOString().split('T')[0]}T${endTime}`),
-        status: "pending",
+        start_date: startDateTime.toISOString(),
+        end_date: endDateTime.toISOString(),
+        status: "Reserved",
         total_price: calculateTotalPrice(),
         notes
       }
@@ -117,6 +151,12 @@ export default function CreateRentalPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(rentalData)
       })
+
+      if (!rentalResponse.ok) {
+        const error = await rentalResponse.json()
+        throw new Error(error.error || 'Failed to create rental')
+      }
+
       const { rental_id } = await rentalResponse.json()
 
       // 3. Create rental equipment records
@@ -130,6 +170,7 @@ export default function CreateRentalPage() {
           })
         })
       )
+
       await Promise.all(equipmentPromises)
 
       toast.success("Rental created successfully!")
@@ -137,7 +178,7 @@ export default function CreateRentalPage() {
       
     } catch (error) {
       console.error("Error creating rental:", error)
-      toast.error("Failed to create rental. Please try again.")
+      toast.error(error instanceof Error ? error.message : "Failed to create rental. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -218,18 +259,27 @@ export default function CreateRentalPage() {
 
                   <div className="space-y-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="name">Full Name</Label>
+                      <Label htmlFor="first_name">First Name</Label>
                       <Input 
-                        id="name" 
-                        value={customerData.full_name}
-                        onChange={(e) => handleCustomerChange("full_name", e.target.value)}
-                        placeholder="John Doe" 
+                        id="first_name" 
+                        value={customerData.first_name}
+                        onChange={(e) => handleCustomerChange("first_name", e.target.value)}
+                        placeholder="John" 
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="last_name">Last Name</Label>
+                      <Input 
+                        id="last_name" 
+                        value={customerData.last_name}
+                        onChange={(e) => handleCustomerChange("last_name", e.target.value)}
+                        placeholder="Doe" 
                       />
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="email">Email Address</Label>
                       <Input 
-                        id="email" 
+                        id="email"
                         type="email"
                         value={customerData.email}
                         onChange={(e) => handleCustomerChange("email", e.target.value)}
@@ -365,7 +415,7 @@ export default function CreateRentalPage() {
                   <Button 
                     className="ml-auto" 
                     onClick={() => setStep(2)}
-                    disabled={!customerData.full_name || !startDate || !endDate || !startTime || !endTime}
+                    disabled={!customerData.first_name || !startDate || !endDate || !startTime || !endTime}
                   >
                     Continue <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -655,9 +705,9 @@ export default function CreateRentalPage() {
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div>
                       <h3 className="font-medium mb-2">Customer</h3>
-                      <p>John Doe</p>
-                      <p className="text-sm text-muted-foreground">john@example.com</p>
-                      <p className="text-sm text-muted-foreground">+63 912 345 6789</p>
+                      <p>{customerData.first_name} {customerData.last_name}</p>
+                      <p className="text-sm text-muted-foreground">{customerData.email}</p>
+                      <p className="text-sm text-muted-foreground">{customerData.phone}</p>
                     </div>
                     <div>
                       <h3 className="font-medium mb-2">Schedule</h3>
