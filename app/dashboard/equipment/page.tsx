@@ -74,13 +74,13 @@ export default function EquipmentPage() {
       </DashboardHeader>
 
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 w-full">
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="w-full">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search equipment..."
-                className="pl-8"
+                className="pl-8 w-full"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -101,7 +101,7 @@ export default function EquipmentPage() {
         </div>
 
         {loading ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map(i => (
               <Card key={i} className="animate-pulse">
                 <div className="aspect-video bg-muted" />
@@ -120,7 +120,7 @@ export default function EquipmentPage() {
           </div>
         ) : filteredEquipment.length === 0 ? (
           <Card>
-            <CardContent className="py-16 text-center">
+            <CardContent className="py-12 sm:py-16 text-center">
               <div className="flex flex-col items-center justify-center">
                 <div className="bg-muted rounded-full p-6 mb-6">
                   <Camera className="h-8 w-8 text-muted-foreground" />
@@ -130,7 +130,7 @@ export default function EquipmentPage() {
                     ? "No equipment added yet"
                     : "No equipment matches your search"}
                 </h3>
-                <p className="text-muted-foreground mb-6 max-w-md">
+                <p className="text-muted-foreground mb-6 max-w-md px-4 sm:px-0">
                   {equipment.length === 0 
                     ? "Start by adding your first piece of equipment to your inventory."
                     : "Try adjusting your search or filter criteria."}
@@ -146,10 +146,10 @@ export default function EquipmentPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredEquipment.map((item) => (
               <Card key={item.equipment_id} className="overflow-hidden flex flex-col">
-                <div className="aspect-video bg-muted">
+                <div className="aspect-video bg-muted relative">
                   {item.image_url ? (
                     <img
                       src={item.image_url}
@@ -163,20 +163,20 @@ export default function EquipmentPage() {
                   )}
                 </div>
                 <CardHeader className="pb-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-base">{item.name}</CardTitle>
-                      <CardDescription className="min-h-[20px]">{item.description}</CardDescription>
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-base line-clamp-1">{item.name}</CardTitle>
+                      <CardDescription className="min-h-[20px] line-clamp-2">{item.description}</CardDescription>
                     </div>
-                    <div className="flex items-center justify-center h-6 w-6 rounded-full bg-green-100 text-green-600 text-xs font-medium">
+                    <div className="flex items-center justify-center h-6 w-6 rounded-full bg-green-100 text-green-600 text-xs font-medium flex-shrink-0">
                       {item.quantity_available}
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="flex-grow space-y-3">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-sm">Status</span>
-                    <span className={`font-medium ${
+                    <span className={`font-medium text-sm ${
                       item.status === 'Available' ? 'text-green-600' : 
                       item.status === 'Rented' ? 'text-orange-600' :
                       item.status === 'In Repair' ? 'text-yellow-600' :
@@ -187,27 +187,27 @@ export default function EquipmentPage() {
                     </span>
                   </div>
                   {item.rental_rates?.length > 0 && (
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-sm">Daily Rate</span>
-                      <span className="font-medium">
+                      <span className="font-medium text-sm">
                         From ₱{Math.min(...item.rental_rates.map(rate => rate.daily_rate))}
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-sm">Type</span>
-                    <span className="font-medium capitalize">{item.type}</span>
+                    <span className="font-medium text-sm capitalize">{item.type}</span>
                   </div>
                 </CardContent>
-                <CardFooter className="flex gap-4">
-                  <Button variant="outline" className="flex-1" asChild>
+                <CardFooter className="grid grid-cols-2 gap-2 p-4 sm:p-6">
+                  <Button variant="outline" className="w-full" asChild>
                     <Link href={`/dashboard/equipment/${item.equipment_id}`}>
                       Edit
                     </Link>
                   </Button>
-                  <Button variant="outline" className="flex-1" asChild>
+                  <Button variant="outline" className="w-full" asChild>
                     <Link href={`/dashboard/equipment/${item.equipment_id}/history`}>
-                      View History
+                      History
                     </Link>
                   </Button>
                 </CardFooter>

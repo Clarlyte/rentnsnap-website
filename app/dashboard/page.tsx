@@ -118,9 +118,9 @@ export default function DashboardPage() {
 
   return (
     <DashboardShell>
-      <div className="flex flex-col space-y-6 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Dashboard Overview</h1>
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="w-full sm:w-auto">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Equipment Type" />
@@ -137,9 +137,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Top Stats Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="Total Revenue"
             value={metrics.totalRevenue}
@@ -170,9 +170,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Bottom Section */}
-        <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-[2fr_1fr]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_300px] xl:grid-cols-[2fr_1fr]">
           {/* Recent Activity */}
-          <div className="rounded-lg border bg-card p-6">
+          <div className="rounded-lg border bg-card p-4 sm:p-6">
             <div className="mb-6 flex items-center justify-between">
               <h3 className="font-semibold">Recent Activity</h3>
               <Button variant="link" asChild className="h-auto p-0">
@@ -182,9 +182,9 @@ export default function DashboardPage() {
             <div className="space-y-4">
               {rentals.slice(0, 5).map(rental => (
                 <div key={rental.rental_id} className="flex items-center justify-between border-b pb-4 last:border-0">
-                  <div>
-                    <p className="font-medium">{rental.customerName}</p>
-                    <p className="text-sm text-muted-foreground">{rental.equipment}</p>
+                  <div className="min-w-0 flex-1 pr-4">
+                    <p className="font-medium line-clamp-1">{rental.customerName}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-1">{rental.equipment}</p>
                   </div>
                   <Badge variant={
                     rental.status === 'Active' ? 'default' :
@@ -201,7 +201,7 @@ export default function DashboardPage() {
           {/* Right Side Cards */}
           <div className="space-y-6">
             {/* Equipment Status */}
-            <div className="rounded-lg border bg-card p-6 hover:shadow-md transition-shadow">
+            <div className="rounded-lg border bg-card p-4 sm:p-6 hover:shadow-md transition-shadow">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="font-semibold">Equipment Status</h3>
                 <Button variant="link" asChild className="h-auto p-0">
@@ -231,7 +231,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Upcoming Returns */}
-            <div className="rounded-lg border bg-card p-6 hover:shadow-md transition-shadow">
+            <div className="rounded-lg border bg-card p-4 sm:p-6 hover:shadow-md transition-shadow">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="font-semibold">Upcoming Returns</h3>
                 <Button variant="link" asChild className="h-auto p-0">
@@ -241,9 +241,9 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 {getUpcomingReturns().map(rental => (
                   <div key={rental.rental_id} className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">{rental.customerName}</p>
-                      <p className="text-xs text-muted-foreground">
+                    <div className="min-w-0 flex-1 pr-4">
+                      <p className="text-sm font-medium line-clamp-1">{rental.customerName}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-1">
                         {new Date(rental.endDate).toLocaleString('en-US', {
                           month: 'short',
                           day: 'numeric',
@@ -252,13 +252,10 @@ export default function DashboardPage() {
                         })}
                       </p>
                     </div>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                      {rental.equipment}
-                    </Badge>
                   </div>
                 ))}
                 {getUpcomingReturns().length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center">No upcoming returns in the next 7 days</p>
+                  <p className="text-center text-sm text-muted-foreground">No upcoming returns</p>
                 )}
               </div>
             </div>
