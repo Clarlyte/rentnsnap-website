@@ -37,8 +37,8 @@ export default function CreateRentalPage() {
   const router = useRouter()
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
-  const [startTime, setStartTime] = useState<string>("")
-  const [endTime, setEndTime] = useState<string>("")
+  const [startTime, setStartTime] = useState<string>("09:00")
+  const [endTime, setEndTime] = useState<string>("17:00")
   const [step, setStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   
@@ -54,6 +54,32 @@ export default function CreateRentalPage() {
   const [notes, setNotes] = useState("")
   const [equipment, setEquipment] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+
+  const calculateDuration = () => {
+    if (!startDate || !endDate || !startTime || !endTime) return null;
+    
+    const startDateTime = new Date(startDate);
+    const [startHours, startMinutes] = startTime.split(':');
+    startDateTime.setHours(parseInt(startHours), parseInt(startMinutes), 0);
+
+    const endDateTime = new Date(endDate);
+    const [endHours, endMinutes] = endTime.split(':');
+    endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0);
+
+    const durationMs = endDateTime.getTime() - startDateTime.getTime();
+    const durationHours = durationMs / (1000 * 60 * 60);
+    const days = Math.floor(durationHours / 24);
+    const hours = Math.round(durationHours % 24);
+
+    return {
+      days,
+      hours,
+      startDateTime,
+      endDateTime,
+      formattedStart: format(startDateTime, "PPP p"),
+      formattedEnd: format(endDateTime, "PPP p")
+    };
+  };
 
   const handleCustomerChange = (field: keyof CustomerFormData, value: string) => {
     setCustomerData(prev => ({ ...prev, [field]: value }))
@@ -87,22 +113,26 @@ export default function CreateRentalPage() {
   }
 
   const calculateTotalPrice = () => {
-    const days = endDate && startDate ? 
-      Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) : 0
-    return selectedEquipment.reduce((total, item) => total + (item.daily_rate * days), 0)
+    if (!startDate || !endDate || !startTime || !endTime) return 0;
+    
+    const startDateTime = new Date(startDate);
+    const [startHours, startMinutes] = startTime.split(':');
+    startDateTime.setHours(parseInt(startHours), parseInt(startMinutes), 0);
+
+    const endDateTime = new Date(endDate);
+    const [endHours, endMinutes] = endTime.split(':');
+    endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0);
+
+    // Calculate duration in days, including partial days
+    const durationInHours = (endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60);
+    const durationInDays = Math.ceil(durationInHours / 24);
+
+    return selectedEquipment.reduce((total, item) => total + (item.daily_rate * durationInDays), 0);
   }
 
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true)
-
-      // Format time string to 24-hour format
-      const formatTime = (timeStr: string) => {
-        const hour = parseInt(timeStr.replace(/[ap]m/, ''))
-        const isPM = timeStr.includes('pm')
-        const hour24 = isPM ? (hour === 12 ? 12 : hour + 12) : (hour === 12 ? 0 : hour)
-        return `${hour24.toString().padStart(2, '0')}:00:00`
-      }
 
       // 1. Create or get customer
       const customerResponse = await fetch("/api/customers", {
@@ -126,16 +156,12 @@ export default function CreateRentalPage() {
         throw new Error('Invalid dates')
       }
 
-      // Set the time components
-      startDateTime.setHours(parseInt(startTime.replace(/[ap]m/, '')))
-      if (startTime.includes('pm') && !startTime.startsWith('12')) {
-        startDateTime.setHours(startDateTime.getHours() + 12)
-      }
+      // Set the time components using 24-hour format
+      const [startHours, startMinutes] = startTime.split(':')
+      startDateTime.setHours(parseInt(startHours), parseInt(startMinutes), 0)
       
-      endDateTime.setHours(parseInt(endTime.replace(/[ap]m/, '')))
-      if (endTime.includes('pm') && !endTime.startsWith('12')) {
-        endDateTime.setHours(endDateTime.getHours() + 12)
-      }
+      const [endHours, endMinutes] = endTime.split(':')
+      endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0)
 
       const rentalData = {
         customer_id,
@@ -200,6 +226,16 @@ export default function CreateRentalPage() {
     }
     fetchEquipment()
   }, [])
+
+  // Replace the time selection JSX with 24-hour format input
+  const TimeSelect = ({ value, onChange }: { value: string, onChange: (time: string) => void }) => (
+    <Input
+      type="time"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-[120px]"
+    />
+  );
 
   return (
     <DashboardShell>
@@ -334,22 +370,7 @@ export default function CreateRentalPage() {
                           <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
                         </PopoverContent>
                       </Popover>
-                      <Select value={startTime} onValueChange={setStartTime}>
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Time" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="9am">9:00 AM</SelectItem>
-                          <SelectItem value="10am">10:00 AM</SelectItem>
-                          <SelectItem value="11am">11:00 AM</SelectItem>
-                          <SelectItem value="12pm">12:00 PM</SelectItem>
-                          <SelectItem value="1pm">1:00 PM</SelectItem>
-                          <SelectItem value="2pm">2:00 PM</SelectItem>
-                          <SelectItem value="3pm">3:00 PM</SelectItem>
-                          <SelectItem value="4pm">4:00 PM</SelectItem>
-                          <SelectItem value="5pm">5:00 PM</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <TimeSelect value={startTime} onChange={setStartTime} />
                     </div>
                   </div>
 
@@ -373,31 +394,26 @@ export default function CreateRentalPage() {
                           <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus />
                         </PopoverContent>
                       </Popover>
-                      <Select value={endTime} onValueChange={setEndTime}>
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Time" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="9am">9:00 AM</SelectItem>
-                          <SelectItem value="10am">10:00 AM</SelectItem>
-                          <SelectItem value="11am">11:00 AM</SelectItem>
-                          <SelectItem value="12pm">12:00 PM</SelectItem>
-                          <SelectItem value="1pm">1:00 PM</SelectItem>
-                          <SelectItem value="2pm">2:00 PM</SelectItem>
-                          <SelectItem value="3pm">3:00 PM</SelectItem>
-                          <SelectItem value="4pm">4:00 PM</SelectItem>
-                          <SelectItem value="5pm">5:00 PM</SelectItem>
-                          <SelectItem value="6pm">6:00 PM</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <TimeSelect value={endTime} onChange={setEndTime} />
                     </div>
                   </div>
 
                   <div className="grid gap-2">
                     <Label>Rental Duration</Label>
                     <div className="p-3 bg-muted rounded-md">
-                      <p className="font-medium">3 days, 8 hours</p>
-                      <p className="text-sm text-muted-foreground">March 15, 2023 10:00 AM - March 18, 2023 6:00 PM</p>
+                      {calculateDuration() ? (
+                        <>
+                          <p className="font-medium">
+                            {calculateDuration()?.days} days
+                            {calculateDuration()?.hours > 0 ? `, ${calculateDuration()?.hours} hours` : ''}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {calculateDuration()?.formattedStart} - {calculateDuration()?.formattedEnd}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Select start and end dates to see duration</p>
+                      )}
                     </div>
                   </div>
 
@@ -711,8 +727,17 @@ export default function CreateRentalPage() {
                     </div>
                     <div>
                       <h3 className="font-medium mb-2">Schedule</h3>
-                      <p>March 15, 2023 10:00 AM - March 18, 2023 6:00 PM</p>
-                      <p className="text-sm text-muted-foreground">3 days, 8 hours</p>
+                      {calculateDuration() ? (
+                        <>
+                          <p>{calculateDuration()?.formattedStart} - {calculateDuration()?.formattedEnd}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {calculateDuration()?.days} days
+                            {calculateDuration()?.hours > 0 ? `, ${calculateDuration()?.hours} hours` : ''}
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Schedule not set</p>
+                      )}
                     </div>
                     <div>
                       <h3 className="font-medium mb-2">Total</h3>
