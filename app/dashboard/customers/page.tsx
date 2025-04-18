@@ -10,6 +10,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Plus, Search, User } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface Customer {
   customer_id: string
@@ -19,12 +26,16 @@ interface Customer {
   phone: string | null
   address: string | null
   created_at: string
+  status: 'Active' | 'Inactive'
+  total_rentals: number
 }
 
 export default function CustomersPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7))
+  const [selectedStatus, setSelectedStatus] = useState<string>("all")
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -46,15 +57,20 @@ export default function CustomersPage() {
     fetchCustomers()
   }, [])
 
-  // Filter customers based on search query
+  // Filter customers based on search query, month, and status
   const filteredCustomers = customers.filter(customer => {
     const searchTerm = searchQuery.toLowerCase()
-    return (
+    const customerMonth = new Date(customer.created_at).toISOString().slice(0, 7)
+    const matchesSearch = 
       customer.first_name.toLowerCase().includes(searchTerm) ||
       customer.last_name.toLowerCase().includes(searchTerm) ||
       customer.email.toLowerCase().includes(searchTerm) ||
       (customer.phone && customer.phone.toLowerCase().includes(searchTerm))
-    )
+    
+    const matchesMonth = selectedMonth === 'all' || customerMonth === selectedMonth
+    const matchesStatus = selectedStatus === 'all' || customer.status === selectedStatus
+
+    return matchesSearch && matchesMonth && matchesStatus
   })
 
   return (
@@ -68,11 +84,11 @@ export default function CustomersPage() {
       </DashboardHeader>
 
       <div className="space-y-6">
-        {/* Search Section */}
+        {/* Search and Filter Section */}
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <div className="flex-1 w-full">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <div className="relative w-full">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Search customers..."
                 className="pl-8"
@@ -80,6 +96,39 @@ export default function CustomersPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Select
+              value={selectedMonth}
+              onValueChange={setSelectedMonth}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select month" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
+                {Array.from({ length: 12 }, (_, i) => {
+                  const date = new Date()
+                  date.setMonth(date.getMonth() - i)
+                  const value = date.toISOString().slice(0, 7)
+                  const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                  return <SelectItem key={value} value={value}>{label}</SelectItem>
+                })}
+              </SelectContent>
+            </Select>
+            <Select
+              value={selectedStatus}
+              onValueChange={setSelectedStatus}
+            >
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -92,13 +141,14 @@ export default function CustomersPage() {
                 <TableHead className="hidden lg:table-cell">Phone</TableHead>
                 <TableHead className="hidden xl:table-cell">Address</TableHead>
                 <TableHead className="hidden md:table-cell">Member Since</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">
+                  <TableCell colSpan={7} className="text-center">
                     <div className="flex flex-col items-center justify-center py-12">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
                       <p className="text-muted-foreground">Loading customers...</p>
@@ -107,7 +157,7 @@ export default function CustomersPage() {
                 </TableRow>
               ) : filteredCustomers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">
+                  <TableCell colSpan={7} className="text-center">
                     <div className="flex flex-col items-center justify-center py-16">
                       <div className="bg-muted rounded-full p-6 mb-6">
                         <User className="h-8 w-8 text-muted-foreground" />
@@ -154,6 +204,15 @@ export default function CustomersPage() {
                     <TableCell className="hidden lg:table-cell">{customer.phone || '-'}</TableCell>
                     <TableCell className="hidden xl:table-cell">{customer.address || '-'}</TableCell>
                     <TableCell className="hidden md:table-cell">{new Date(customer.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        customer.status === 'Active' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                      }`}>
+                        {customer.status}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Button variant="ghost" asChild className="w-full sm:w-auto">
                         <Link href={`/dashboard/customers/customer-data/${customer.customer_id}`}>

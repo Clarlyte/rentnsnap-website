@@ -17,11 +17,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
         </div>
       </header>
       <div className="container mx-auto flex-1 px-4 sm:px-6 lg:px-8">
-        <div className="grid flex-1 gap-8 md:grid-cols-[200px_1fr] lg:grid-cols-[240px_1fr]">
-          <aside className="hidden w-[200px] flex-col md:flex lg:w-[240px]">
+        <div className="grid flex-1 gap-12 md:grid-cols-[200px_1fr] lg:grid-cols-[240px_1fr]">
+          <aside className="hidden w-[200px] flex-col md:flex lg:w-[240px] pt-8">
             <DashboardNav />
           </aside>
-          <main className="flex w-full flex-1 flex-col overflow-hidden py-8">
+          <main className="flex w-full flex-1 flex-col overflow-hidden py-8 md:pl-6 lg:pl-8">
             <div className="mx-auto w-full max-w-7xl space-y-8">
               {children}
             </div>

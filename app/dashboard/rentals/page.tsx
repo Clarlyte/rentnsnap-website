@@ -7,10 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
-import { Plus, Search, Copy, User, MoreVertical, Ban, FileText } from "lucide-react"
+import { Plus, Search, Copy, User, MoreVertical, Ban, FileText, CalendarIcon } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
+import { format } from "date-fns"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,10 +35,15 @@ export default function RentalsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [formLink, setFormLink] = useState("")
   const [rentals, setRentals] = useState<any[]>([])
+  const [filteredRentals, setFilteredRentals] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [cancelDialog, setCancelDialog] = useState(false)
   const [selectedRental, setSelectedRental] = useState<any>(null)
   const [voidAmount, setVoidAmount] = useState("")
+  const [selectedMonth, setSelectedMonth] = useState<Date | undefined>(new Date())
+  const [selectedStatus, setSelectedStatus] = useState("all")
+  const [selectedEquipmentType, setSelectedEquipmentType] = useState("all")
+  const [equipmentTypes, setEquipmentTypes] = useState<string[]>([])
 
   const generateFormLink = () => {
     const token = Math.random().toString(36).substring(2, 15)
@@ -76,6 +85,62 @@ export default function RentalsPage() {
 
     fetchRentals()
   }, [])
+
+  useEffect(() => {
+    const fetchEquipmentTypes = async () => {
+      try {
+        const response = await fetch('/api/equipment')
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.error)
+        
+        const types = Array.from(new Set(data.map((item: any) => item.type))) as string[]
+        setEquipmentTypes(types)
+      } catch (error) {
+        console.error('Error fetching equipment types:', error)
+      }
+    }
+
+    fetchEquipmentTypes()
+  }, [])
+
+  // Filter rentals based on search and filters
+  useEffect(() => {
+    let filtered = [...rentals]
+
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(rental => 
+        rental.customerName.toLowerCase().includes(query) ||
+        rental.equipment.toLowerCase().includes(query) ||
+        rental.rental_id.toLowerCase().includes(query)
+      )
+    }
+
+    // Month filter
+    if (selectedMonth) {
+      const month = selectedMonth.getMonth()
+      const year = selectedMonth.getFullYear()
+      filtered = filtered.filter(rental => {
+        const startDate = new Date(rental.startDate)
+        return startDate.getMonth() === month && startDate.getFullYear() === year
+      })
+    }
+
+    // Status filter
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(rental => rental.status === selectedStatus)
+    }
+
+    // Equipment type filter
+    if (selectedEquipmentType !== 'all') {
+      filtered = filtered.filter(rental => 
+        rental.equipment.toLowerCase().includes(selectedEquipmentType.toLowerCase())
+      )
+    }
+
+    setFilteredRentals(filtered)
+  }, [searchQuery, selectedMonth, selectedStatus, selectedEquipmentType, rentals])
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, customerName: string) => {
     console.error(`Error loading image for ${customerName}:`, e)
@@ -170,36 +235,93 @@ export default function RentalsPage() {
       </DashboardHeader>
 
       <div className="space-y-6">
-        {/* Search Section */}
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex-1 w-full">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        {/* Form Link Section */}
+        <div className="bg-muted p-8 rounded-lg">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <div className="flex-1 w-full">
               <Input
-                placeholder="Search rentals..."
-                className="pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={formLink || "Click the copy icon to generate a rental form link"}
+                readOnly
+                className="w-full bg-background"
               />
             </div>
-          </div>
-        </div>
-
-        {/* Form Link Section */}
-        <div className="bg-muted p-6 rounded-lg">
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Input
-              value={formLink || "Click the copy icon to generate a rental form link"}
-              readOnly
-              className="flex-1 w-full"
-            />
-            <Button variant="outline" size="icon" onClick={copyFormLink} className="w-full sm:w-auto">
-              <Copy className="h-4 w-4" />
+            <Button 
+              variant="outline" 
+              onClick={copyFormLink} 
+              className="min-w-[120px] h-10"
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Copy Link
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground mt-3">
+          <p className="text-sm text-muted-foreground mt-4">
             Share this link with customers to let them fill in their rental information
           </p>
+        </div>
+
+        {/* Search and Filters Section */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search rentals..."
+                  className="pl-9 h-12"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex gap-4 flex-col sm:flex-row sm:w-auto w-full">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-[180px] h-12 justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedMonth ? format(selectedMonth, 'MMMM yyyy') : 'Pick a month'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={selectedMonth}
+                    onSelect={setSelectedMonth}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-full sm:w-[180px] h-12">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="Reserved">Reserved</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Completed">Completed</SelectItem>
+                  <SelectItem value="Cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedEquipmentType} onValueChange={setSelectedEquipmentType}>
+                <SelectTrigger className="w-full sm:w-[180px] h-12">
+                  <SelectValue placeholder="Equipment Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {equipmentTypes.map(type => (
+                    <SelectItem key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
         <div className="rounded-lg border overflow-x-auto">
@@ -226,7 +348,7 @@ export default function RentalsPage() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : rentals.length === 0 ? (
+              ) : filteredRentals.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center">
                     <div className="flex flex-col items-center justify-center py-16">
@@ -251,7 +373,7 @@ export default function RentalsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                rentals.map((rental) => (
+                filteredRentals.map((rental) => (
                   <TableRow key={rental.rental_id}>
                     <TableCell className="hidden sm:table-cell">
                       <div className="relative h-12 w-12 rounded-full overflow-hidden bg-muted">

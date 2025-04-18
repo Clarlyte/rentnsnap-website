@@ -43,15 +43,18 @@ export function DashboardNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="grid items-start gap-2 py-6">
+    <nav className="grid items-start gap-2 py-6 px-2">
       {navItems.map((item) => {
-        const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+        const isActive = item.href === "/dashboard" 
+          ? pathname === "/dashboard" // Exact match for dashboard
+          : pathname.startsWith(`${item.href}/`) || pathname === item.href // For other pages
+
         return (
           <Link key={item.href} href={item.href}>
             <Button
               variant={isActive ? "default" : "ghost"}
               className={cn(
-                "w-full justify-start group",
+                "w-[calc(100%-8px)] justify-start group rounded-md mx-1",
                 isActive && "bg-gold-500/10 text-gold-400 hover:bg-gold-500/20"
               )}
             >
