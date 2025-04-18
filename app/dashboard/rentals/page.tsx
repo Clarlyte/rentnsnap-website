@@ -40,7 +40,7 @@ export default function RentalsPage() {
   const [cancelDialog, setCancelDialog] = useState(false)
   const [selectedRental, setSelectedRental] = useState<any>(null)
   const [voidAmount, setVoidAmount] = useState("")
-  const [selectedMonth, setSelectedMonth] = useState<Date | undefined>(new Date())
+  const [selectedMonth, setSelectedMonth] = useState<string>("all")
   const [selectedStatus, setSelectedStatus] = useState("all")
   const [selectedEquipmentType, setSelectedEquipmentType] = useState("all")
   const [equipmentTypes, setEquipmentTypes] = useState<string[]>([])
@@ -118,12 +118,10 @@ export default function RentalsPage() {
     }
 
     // Month filter
-    if (selectedMonth) {
-      const month = selectedMonth.getMonth()
-      const year = selectedMonth.getFullYear()
+    if (selectedMonth !== 'all') {
       filtered = filtered.filter(rental => {
-        const startDate = new Date(rental.startDate)
-        return startDate.getMonth() === month && startDate.getFullYear() === year
+        const rentalMonth = new Date(rental.startDate).toISOString().slice(0, 7)
+        return rentalMonth === selectedMonth
       })
     }
 
@@ -221,18 +219,7 @@ export default function RentalsPage() {
 
   return (
     <DashboardShell>
-      <DashboardHeader heading="Rentals" text="Manage your rental bookings">
-        <div className="flex gap-4">
-          <Button asChild className="w-full sm:w-auto">
-            <Link href="/dashboard/rentals/create-rental">
-              <Plus className="mr-2 h-4 w-4" /> New Rental
-            </Link>
-          </Button>
-          <Button variant="outline" onClick={copyFormLink} title="Copy rental form link" className="w-full sm:w-auto">
-            <Copy className="h-4 w-4" />
-          </Button>
-        </div>
-      </DashboardHeader>
+      <DashboardHeader heading="Rentals" text="Manage your rental bookings" />
 
       <div className="space-y-6">
         {/* Form Link Section */}
@@ -274,25 +261,24 @@ export default function RentalsPage() {
               </div>
             </div>
             <div className="flex gap-4 flex-col sm:flex-row sm:w-auto w-full">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-[180px] h-12 justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedMonth ? format(selectedMonth, 'MMMM yyyy') : 'Pick a month'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={selectedMonth}
-                    onSelect={setSelectedMonth}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Select
+                value={selectedMonth}
+                onValueChange={setSelectedMonth}
+              >
+                <SelectTrigger className="w-full sm:w-[180px] h-12">
+                  <SelectValue placeholder="Select month" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const date = new Date()
+                    date.setMonth(date.getMonth() - i)
+                    const value = date.toISOString().slice(0, 7)
+                    const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                    return <SelectItem key={value} value={value}>{label}</SelectItem>
+                  })}
+                </SelectContent>
+              </Select>
               
               <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                 <SelectTrigger className="w-full sm:w-[180px] h-12">
