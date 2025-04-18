@@ -8,15 +8,32 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import { Plus, Search, Copy, User } from "lucide-react"
+import { Plus, Search, Copy, User, MoreVertical, Ban } from "lucide-react"
 import { toast } from "sonner"
 import Image from "next/image"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export default function RentalsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [formLink, setFormLink] = useState("")
   const [rentals, setRentals] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [cancelDialog, setCancelDialog] = useState(false)
+  const [selectedRental, setSelectedRental] = useState<any>(null)
+  const [voidAmount, setVoidAmount] = useState("")
 
   const generateFormLink = () => {
     const token = Math.random().toString(36).substring(2, 15)
@@ -67,6 +84,73 @@ export default function RentalsPage() {
     if (fallbackDiv?.classList.contains('fallback-icon')) {
       fallbackDiv.style.display = 'flex'
     }
+  }
+
+  const handleCancelRental = async () => {
+    if (!selectedRental?.rental_id || voidAmount === "") {
+      toast.error('Please enter a void amount')
+      return
+    }
+
+    const numericVoidAmount = parseFloat(voidAmount)
+    if (isNaN(numericVoidAmount) || numericVoidAmount < 0) {
+      toast.error('Please enter a valid void amount')
+      return
+    }
+
+    try {
+      console.log('Selected rental:', selectedRental)
+      const response = await fetch(`/api/rentals/${selectedRental.rental_id}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'Cancelled',
+          void_amount: numericVoidAmount,
+          cancellation_reason: 'Customer requested cancellation',
+          cancelled_at: new Date().toISOString()
+        }),
+      })
+
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to cancel rental')
+      }
+      
+      // Update the rental in the local state
+      setRentals(prev => prev.map(rental => 
+        rental.rental_id === selectedRental.rental_id 
+          ? { 
+              ...rental, 
+              status: 'Cancelled', 
+              voidAmount: numericVoidAmount,
+              cancelled_at: new Date().toISOString()
+            }
+          : rental
+      ))
+
+      toast.success('Rental cancelled successfully')
+      setCancelDialog(false)
+      setSelectedRental(null)
+      setVoidAmount("")
+    } catch (error) {
+      console.error('Error cancelling rental:', error)
+      toast.error(error instanceof Error ? error.message : 'Failed to cancel rental')
+    }
+  }
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })
   }
 
   return (
@@ -128,16 +212,18 @@ export default function RentalsPage() {
                 <TableHead>End Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Amount</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rentals.map((rental) => (
-                <TableRow key={rental.id}>
+                <TableRow key={rental.rental_id}>
                   <TableCell>
                     <div className="relative h-12 w-12 rounded-full overflow-hidden bg-muted">
                       {rental.selfieUrl ? (
                         <>
                           <Image
+                            key={`${rental.rental_id}-image`}
                             src={rental.selfieUrl}
                             alt={`${rental.customerName}'s ID verification`}
                             width={48}
@@ -147,12 +233,19 @@ export default function RentalsPage() {
                             unoptimized
                             priority
                           />
-                          <div className="fallback-icon absolute inset-0 bg-muted items-center justify-center" style={{ display: 'none' }}>
+                          <div 
+                            key={`${rental.rental_id}-fallback`}
+                            className="fallback-icon absolute inset-0 bg-muted items-center justify-center" 
+                            style={{ display: 'none' }}
+                          >
                             <User className="h-6 w-6 text-muted-foreground" />
                           </div>
                         </>
                       ) : (
-                        <div className="absolute inset-0 bg-muted flex items-center justify-center">
+                        <div 
+                          key={`${rental.rental_id}-default`}
+                          className="absolute inset-0 bg-muted flex items-center justify-center"
+                        >
                           <User className="h-6 w-6 text-muted-foreground" />
                         </div>
                       )}
@@ -160,18 +253,114 @@ export default function RentalsPage() {
                   </TableCell>
                   <TableCell>{rental.customerName}</TableCell>
                   <TableCell>{rental.equipment}</TableCell>
-                  <TableCell>{rental.startDate}</TableCell>
-                  <TableCell>{rental.endDate}</TableCell>
+                  <TableCell>{formatDateTime(rental.startDate)}</TableCell>
+                  <TableCell>{formatDateTime(rental.endDate)}</TableCell>
                   <TableCell>
-                    <Badge variant={rental.status === "Active" ? "default" : "secondary"}>{rental.status}</Badge>
+                    <Badge 
+                      variant={
+                        rental.status === "Active" ? "default" : 
+                        rental.status === "Cancelled" ? "destructive" : 
+                        "secondary"
+                      }
+                    >
+                      {rental.status}
+                    </Badge>
+                    {rental.status === 'Cancelled' && rental.voidAmount && (
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Void: ₱{rental.voidAmount.toLocaleString()}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>₱{(rental.amount).toLocaleString()}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {rental.status !== 'Cancelled' && (
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => {
+                              console.log('Selected rental for cancellation:', rental)
+                              setSelectedRental(rental)
+                              setCancelDialog(true)
+                            }}
+                          >
+                            <Ban className="mr-2 h-4 w-4" />
+                            Cancel Rental
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
       </div>
+
+      <Dialog open={cancelDialog} onOpenChange={setCancelDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Rental</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel this rental? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium">
+              Void Amount
+              <Input
+                type="text"
+                placeholder="Enter void amount"
+                value={voidAmount}
+                onChange={(e) => {
+                  // Only allow numbers
+                  const value = e.target.value.replace(/[^0-9]/g, '')
+                  setVoidAmount(value)
+                }}
+                className="mt-1"
+              />
+            </label>
+            {selectedRental && (
+              <div className="mt-2 text-sm text-muted-foreground">
+                Rental ID: {selectedRental.rental_id}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setCancelDialog(false)
+              setSelectedRental(null)
+              setVoidAmount("")
+            }}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleCancelRental}
+              disabled={!selectedRental?.rental_id || voidAmount === "" || isNaN(parseFloat(voidAmount)) || parseFloat(voidAmount) < 0}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              onMouseEnter={() => {
+                console.log('Button state:', {
+                  selectedRentalId: selectedRental?.rental_id,
+                  voidAmount,
+                  isVoidAmountEmpty: voidAmount === "",
+                  isVoidAmountNaN: isNaN(parseFloat(voidAmount)),
+                  isVoidAmountNegative: parseFloat(voidAmount) < 0,
+                  isDisabled: !selectedRental?.rental_id || voidAmount === "" || isNaN(parseFloat(voidAmount)) || parseFloat(voidAmount) < 0
+                })
+              }}
+            >
+              Confirm Cancellation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardShell>
   )
 }

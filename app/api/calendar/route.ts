@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 export async function GET() {
   try {
     const supabase = createRouteHandlerClient({ cookies })
+    const now = new Date()
 
     // First, get all equipment
     const { data: equipment, error: equipmentError } = await supabase
@@ -14,6 +15,41 @@ export async function GET() {
 
     if (equipmentError) {
       throw equipmentError
+    }
+
+    // Update rental statuses based on current time
+    const { error: updateError } = await supabase
+      .from('rentals')
+      .update({ status: 'Active' })
+      .eq('status', 'Reserved')
+      .lte('start_date', now.toISOString())
+      .gt('end_date', now.toISOString())
+      .order('start_date', { ascending: true })
+
+    if (updateError) {
+      console.error('Error updating rental statuses:', updateError)
+    }
+
+    // Update all rentals that should be active (separate query to ensure we catch all)
+    const { error: activeUpdateError } = await supabase
+      .from('rentals')
+      .update({ status: 'Active' })
+      .eq('status', 'Reserved')
+      .lte('start_date', now.toISOString())
+
+    if (activeUpdateError) {
+      console.error('Error updating active rentals:', activeUpdateError)
+    }
+
+    // Update completed rentals
+    const { error: completedError } = await supabase
+      .from('rentals')
+      .update({ status: 'Completed' })
+      .eq('status', 'Active')
+      .lte('end_date', now.toISOString())
+
+    if (completedError) {
+      console.error('Error updating completed rentals:', completedError)
     }
 
     // Fetch rentals with customer and equipment details
@@ -79,7 +115,8 @@ export async function GET() {
 
     const upcomingReturns = formattedRentals.filter(rental => {
       const endDate = new Date(rental.endDate)
-      return endDate > today && rental.status === 'Reserved'
+      const startDate = new Date(rental.startDate)
+      return startDate <= now && endDate > now && rental.status === 'Active'
     }).sort((a, b) => a.endDate.getTime() - b.endDate.getTime())
 
     return NextResponse.json({
