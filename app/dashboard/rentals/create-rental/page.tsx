@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, forwardRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -18,24 +18,46 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import dynamic from 'next/dynamic'
+import SignatureCanvas from 'react-signature-canvas'
 
-// Import the signature pad component with no SSR
-const SignaturePad = dynamic(
-  () => import('react-signature-canvas').then((mod) => {
-    const SignaturePad = mod.default;
-    return function SignaturePadWrapper(props: any) {
-      return (
-        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-          <SignaturePad {...props} />
-        </div>
-      );
-    };
-  }),
-  {
-    ssr: false,
-    loading: () => <div className="h-full w-full bg-white" />
+interface SignaturePadProps {
+  disabled?: boolean;
+}
+
+const SignaturePadWrapper = forwardRef<SignatureCanvas, SignaturePadProps>((props, ref) => {
+  if (typeof window === 'undefined') {
+    return <div className="h-full w-full bg-white" />;
   }
-);
+  
+  return (
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <SignatureCanvas
+        ref={ref}
+        penColor="black"
+        canvasProps={{
+          className: "signature-canvas",
+          style: {
+            width: '100%',
+            height: '100%',
+            maxWidth: '100%',
+            maxHeight: '100%',
+            border: 'none',
+            backgroundColor: 'white',
+            cursor: props.disabled ? 'not-allowed' : 'crosshair'
+          }
+        }}
+      />
+      {props.disabled && (
+        <div 
+          className="absolute inset-0" 
+          style={{ backgroundColor: 'transparent', cursor: 'not-allowed' }} 
+        />
+      )}
+    </div>
+  );
+});
+
+SignaturePadWrapper.displayName = 'SignaturePadWrapper';
 
 interface CustomerFormData {
   first_name: string
@@ -88,7 +110,7 @@ export default function CreateRentalPage() {
     selfieWithId: null,
     signature: ""
   })
-  const signaturePadRef = useRef<any>(null)
+  const signaturePadRef = useRef<SignatureCanvas>(null)
   const [isUploading, setIsUploading] = useState<{
     idImage: boolean;
     selfieWithId: boolean;
@@ -97,6 +119,7 @@ export default function CreateRentalPage() {
     selfieWithId: false
   });
   const [isSavingSignature, setIsSavingSignature] = useState(false);
+  const [isSignatureSaved, setIsSignatureSaved] = useState(false);
 
   const calculateDuration = () => {
     if (!startDate || !endDate || !startTime || !endTime) return null;
@@ -212,15 +235,15 @@ export default function CreateRentalPage() {
   }
 
   const handleSignatureSave = async () => {
-    const signaturePad = signaturePadRef.current;
-    if (!signaturePad) {
-      toast.error('Signature pad not initialized');
-      return;
-    }
-
     try {
       setIsSavingSignature(true);
       
+      const signaturePad = signaturePadRef.current;
+      if (!signaturePad) {
+        toast.error('Signature pad not initialized');
+        return;
+      }
+
       if (signaturePad.isEmpty()) {
         toast.error('Please provide a signature before saving');
         return;
@@ -229,11 +252,14 @@ export default function CreateRentalPage() {
       // Get the signature data as PNG with transparent background
       const trimmedDataURL = signaturePad.getTrimmedCanvas().toDataURL('image/png');
       
+      // Save the signature data
       setVerificationData(prev => ({
         ...prev,
         signature: trimmedDataURL
       }));
       
+      // Mark signature as saved
+      setIsSignatureSaved(true);
       toast.success('Signature saved successfully');
     } catch (error) {
       console.error('Error saving signature:', error);
@@ -244,16 +270,28 @@ export default function CreateRentalPage() {
   };
 
   const handleSignatureClear = () => {
-    const signaturePad = signaturePadRef.current;
-    if (signaturePad) {
+    try {
+      // Don't allow clearing if signature is saved
+      if (isSignatureSaved) {
+        toast.error('Cannot clear a saved signature');
+        return;
+      }
+
+      const signaturePad = signaturePadRef.current;
+      if (!signaturePad) {
+        toast.error('Signature pad not initialized');
+        return;
+      }
+      
       signaturePad.clear();
       setVerificationData(prev => ({
         ...prev,
         signature: ""
       }));
       toast.success('Signature cleared');
-    } else {
-      toast.error('Signature pad not initialized');
+    } catch (error) {
+      console.error('Error clearing signature:', error);
+      toast.error('Failed to clear signature. Please try again.');
     }
   };
 
@@ -922,22 +960,23 @@ export default function CreateRentalPage() {
                   <CardDescription>Collect customer's electronic signature</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="border rounded-md p-4 h-40 bg-white">
-                    <SignaturePad
-                      ref={signaturePadRef}
-                      penColor="black"
-                      canvasProps={{
-                        className: "signature-canvas",
-                        style: {
-                          width: '100%',
-                          height: '100%',
-                          maxWidth: '100%',
-                          maxHeight: '100%',
-                          border: 'none',
-                          backgroundColor: 'white'
-                        }
-                      }}
-                    />
+                  <div className="border rounded-md p-4 h-40 bg-white relative">
+                    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                      <SignaturePadWrapper 
+                        ref={signaturePadRef}
+                        disabled={isSignatureSaved} 
+                      />
+                      {isSignatureSaved && (
+                        <div 
+                          className="absolute inset-0 flex items-center justify-center bg-green-50/10"
+                          style={{ pointerEvents: 'none' }}
+                        >
+                          <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
+                            Signature Saved
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex justify-center gap-2">
@@ -945,14 +984,14 @@ export default function CreateRentalPage() {
                       variant="outline" 
                       size="sm" 
                       onClick={handleSignatureClear}
-                      disabled={isSavingSignature}
+                      disabled={isSavingSignature || isSignatureSaved}
                     >
                       Clear
                     </Button>
                     <Button 
                       size="sm" 
                       onClick={handleSignatureSave}
-                      disabled={isSavingSignature}
+                      disabled={isSavingSignature || isSignatureSaved}
                     >
                       {isSavingSignature ? (
                         <>
