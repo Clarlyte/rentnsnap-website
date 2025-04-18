@@ -2,6 +2,25 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
+interface Customer {
+  first_name: string
+  last_name: string
+}
+
+interface Rental {
+  rental_id: string
+  start_date: string
+  end_date: string
+  total_price: number
+  status: string
+  customers: Customer
+}
+
+interface RentalEquipment {
+  rental_id: string
+  rentals: Rental | null
+}
+
 // Get equipment details and rental history
 export async function GET(
   request: Request,
@@ -28,7 +47,7 @@ export async function GET(
     if (equipmentError) throw equipmentError
 
     // Get rental history
-    const { data: rentalHistory, error: historyError } = await supabase
+    const { data, error: historyError } = await supabase
       .from('rental_equipment')
       .select(`
         rental_id,
@@ -49,9 +68,11 @@ export async function GET(
 
     if (historyError) throw historyError
 
+    const rentalHistory = data as unknown as RentalEquipment[]
+
     // Format rental history
     const formattedHistory = rentalHistory
-      .filter(item => item.rentals) // Filter out any null rentals
+      .filter((item): item is RentalEquipment & { rentals: Rental } => item.rentals !== null)
       .map(item => ({
         rental_id: item.rentals.rental_id,
         customer_name: `${item.rentals.customers.first_name} ${item.rentals.customers.last_name}`,
