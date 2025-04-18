@@ -180,8 +180,8 @@ export default function EquipmentPage() {
                       item.status === 'Available' ? 'text-green-600' : 
                       item.status === 'Rented' ? 'text-orange-600' :
                       item.status === 'In Repair' ? 'text-yellow-600' :
-                      item.status === 'Reserved' ? 'text-blue-600' :
-                      'text-red-600'
+                      item.status === 'Retired' ? 'text-red-600' :
+                      'text-muted-foreground'
                     }`}>
                       {item.status}
                     </span>

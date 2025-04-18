@@ -8,7 +8,9 @@ export async function GET(request: Request) {
     
     // Get current date for status calculation
     const now = new Date()
-    const today = now.toISOString()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
 
     // First get all equipment
     const { data: equipment, error: equipmentError } = await supabase
@@ -55,8 +57,8 @@ export async function GET(request: Request) {
 
     // Update equipment status based on rentals
     const updatedEquipment = equipment.map(item => {
-      // If equipment is in repair or retired, keep that status
-      if (item.status === 'In Repair' || item.status === 'Retired') {
+      // If equipment has a manual status, keep it
+      if (['In Repair', 'Retired'].includes(item.status)) {
         return item
       }
 
@@ -65,26 +67,21 @@ export async function GET(request: Request) {
         rental.rental_equipment?.some(re => re.equipment_id === item.equipment_id)
       )
 
-      // Check if equipment is currently rented
+      // Check if equipment is currently rented (today)
       const isCurrentlyRented = equipmentRentals.some(rental => {
         const startDate = new Date(rental.start_date)
         const endDate = new Date(rental.end_date)
-        return now >= startDate && now <= endDate && rental.status === 'Active'
+        return (
+          // Check if rental period overlaps with today
+          (startDate <= tomorrow && endDate >= today) &&
+          rental.status === 'Active'
+        )
       })
 
-      // Check if equipment has future reservations
-      const hasReservations = equipmentRentals.some(rental => {
-        const startDate = new Date(rental.start_date)
-        return now < startDate && rental.status === 'Reserved'
-      })
-
-      // Determine status
-      if (isCurrentlyRented) {
-        return { ...item, status: 'Rented' }
-      } else if (hasReservations) {
-        return { ...item, status: 'Has Reservations' }
-      } else {
-        return { ...item, status: 'Available' }
+      // Set status to either Rented or Available
+      return { 
+        ...item, 
+        status: isCurrentlyRented ? 'Rented' : 'Available'
       }
     })
 
