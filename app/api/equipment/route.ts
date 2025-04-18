@@ -2,11 +2,16 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
     
-    const { data: equipment, error } = await supabase
+    // Get current date for status calculation
+    const now = new Date()
+    const today = now.toISOString()
+
+    // First get all equipment
+    const { data: equipment, error: equipmentError } = await supabase
       .from('equipment')
       .select(`
         equipment_id,
@@ -30,9 +35,60 @@ export async function GET() {
       `)
       .order('name')
 
-    if (error) throw error
+    if (equipmentError) throw equipmentError
 
-    return NextResponse.json(equipment)
+    // Get all active rentals
+    const { data: rentals, error: rentalsError } = await supabase
+      .from('rentals')
+      .select(`
+        rental_id,
+        start_date,
+        end_date,
+        status,
+        rental_equipment (
+          equipment_id
+        )
+      `)
+      .in('status', ['Active', 'Reserved'])
+
+    if (rentalsError) throw rentalsError
+
+    // Update equipment status based on rentals
+    const updatedEquipment = equipment.map(item => {
+      // If equipment is in repair or retired, keep that status
+      if (item.status === 'In Repair' || item.status === 'Retired') {
+        return item
+      }
+
+      // Find active/reserved rentals for this equipment
+      const equipmentRentals = rentals.filter(rental => 
+        rental.rental_equipment?.some(re => re.equipment_id === item.equipment_id)
+      )
+
+      // Check if equipment is currently rented
+      const isCurrentlyRented = equipmentRentals.some(rental => {
+        const startDate = new Date(rental.start_date)
+        const endDate = new Date(rental.end_date)
+        return now >= startDate && now <= endDate && rental.status === 'Active'
+      })
+
+      // Check if equipment has future reservations
+      const hasReservations = equipmentRentals.some(rental => {
+        const startDate = new Date(rental.start_date)
+        return now < startDate && rental.status === 'Reserved'
+      })
+
+      // Determine status
+      if (isCurrentlyRented) {
+        return { ...item, status: 'Rented' }
+      } else if (hasReservations) {
+        return { ...item, status: 'Has Reservations' }
+      } else {
+        return { ...item, status: 'Available' }
+      }
+    })
+
+    return NextResponse.json(updatedEquipment)
   } catch (error) {
     console.error('Error fetching equipment:', error)
     return NextResponse.json({ error: 'Failed to fetch equipment' }, { status: 500 })

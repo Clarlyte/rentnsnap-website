@@ -84,6 +84,23 @@ interface VerificationData {
   signature: string
 }
 
+interface Equipment {
+  equipment_id: string
+  name: string
+  type: string
+  status: string
+  rental_rates: Array<{
+    daily_rate: number
+  }>
+}
+
+interface Rental {
+  startDate: string
+  endDate: string
+  equipment: string[]
+  status: string
+}
+
 export default function CreateRentalPage() {
   const router = useRouter()
   const [startDate, setStartDate] = useState<Date>()
@@ -154,7 +171,6 @@ export default function CreateRentalPage() {
   }
 
   const handleAddEquipment = (item: any) => {
-    // Find the lowest daily rate from the rental rates
     const lowestRate = item.rental_rates.reduce((min: number, rate: any) => 
       rate.daily_rate < min ? rate.daily_rate : min, 
       item.rental_rates[0].daily_rate
@@ -167,7 +183,6 @@ export default function CreateRentalPage() {
       daily_rate: lowestRate
     }
     setSelectedEquipment(prev => {
-      // Check if equipment is already selected
       if (prev.some(e => e.equipment_id === item.equipment_id)) {
         toast.error('This equipment is already added to the rental')
         return prev
@@ -448,22 +463,79 @@ export default function CreateRentalPage() {
     }
   };
 
-  // Fetch equipment on component mount
-  useEffect(() => {
-    const fetchEquipment = async () => {
-      try {
-        const response = await fetch('/api/equipment')
-        const data = await response.json()
-        setEquipment(data)
-      } catch (error) {
-        console.error('Error fetching equipment:', error)
-        toast.error('Failed to load equipment')
-      } finally {
-        setLoading(false)
+  const fetchEquipment = async () => {
+    try {
+      setLoading(true)
+      
+      // Fetch equipment and their rentals
+      const [equipmentResponse, rentalsResponse] = await Promise.all([
+        fetch('/api/equipment'),
+        fetch('/api/rentals')
+      ])
+
+      if (!equipmentResponse.ok || !rentalsResponse.ok) {
+        throw new Error('Failed to fetch data')
       }
+
+      const equipmentData: Equipment[] = await equipmentResponse.json()
+      const rentalsData: Rental[] = await rentalsResponse.json()
+
+      // If dates are selected, filter out unavailable equipment
+      if (startDate && endDate && startTime && endTime) {
+        const rentalStart = new Date(startDate)
+        const [startHours, startMinutes] = startTime.split(':')
+        rentalStart.setHours(parseInt(startHours), parseInt(startMinutes))
+
+        const rentalEnd = new Date(endDate)
+        const [endHours, endMinutes] = endTime.split(':')
+        rentalEnd.setHours(parseInt(endHours), parseInt(endMinutes))
+
+        // Filter equipment based on availability
+        const availableEquipment = equipmentData.filter((equipment: Equipment) => {
+          // If equipment is in repair or retired, it's not available
+          if (equipment.status === 'In Repair' || equipment.status === 'Retired') {
+            return false
+          }
+
+          // Get all rentals for this equipment
+          const equipmentRentals = rentalsData.filter((rental: Rental) => 
+            rental.equipment.includes(equipment.name) && 
+            ['Active', 'Reserved'].includes(rental.status)
+          )
+
+          // Check for time conflicts with the selected rental period
+          const hasConflict = equipmentRentals.some((rental: Rental) => {
+            const existingStart = new Date(rental.startDate)
+            const existingEnd = new Date(rental.endDate)
+
+            // Check if there's any overlap in the time periods
+            return !(rentalEnd <= existingStart || rentalStart >= existingEnd)
+          })
+
+          // Equipment is available if there are no conflicts, regardless of future reservations
+          return !hasConflict
+        })
+
+        setEquipment(availableEquipment)
+      } else {
+        // If no dates selected, show all equipment except those in repair or retired
+        setEquipment(equipmentData.filter((e: Equipment) => 
+          e.status !== 'In Repair' && e.status !== 'Retired'
+        ))
+      }
+
+      setLoading(false)
+    } catch (error) {
+      console.error('Error fetching equipment:', error)
+      toast.error('Failed to load equipment')
+      setLoading(false)
     }
+  }
+
+  // Update equipment list when dates/times change
+  useEffect(() => {
     fetchEquipment()
-  }, [])
+  }, [startDate, endDate, startTime, endTime])
 
   // Replace the time selection JSX with 24-hour format input
   const TimeSelect = ({ value, onChange }: { value: string, onChange: (time: string) => void }) => (
@@ -750,8 +822,13 @@ export default function CreateRentalPage() {
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-sm">Status</span>
-                                      <span className="text-green-600 font-medium">
-                                        {item.status}
+                                      <span className={cn(
+                                        "font-medium",
+                                        item.status === 'Available' && "text-green-600",
+                                        item.status === 'Has Reservations' && "text-blue-600",
+                                        item.status === 'Rented' && "text-orange-600"
+                                      )}>
+                                        {item.status === 'Has Reservations' ? 'Available' : item.status}
                                       </span>
                                     </div>
                                   </div>
@@ -761,7 +838,7 @@ export default function CreateRentalPage() {
                                     variant="outline"
                                     className="w-full"
                                     onClick={() => handleAddEquipment(item)}
-                                    disabled={item.status !== 'Available'}
+                                    disabled={item.status === 'Rented' || item.status === 'In Repair' || item.status === 'Retired'}
                                   >
                                     Add to Rental
                                   </Button>
