@@ -114,67 +114,31 @@ export default function CalendarPage() {
   }
 
   useEffect(() => {
-    const fetchRentals = async () => {
-      try {
-        const response = await fetch('/api/rentals')
-        const data = await response.json()
-        
-        if (!response.ok) throw new Error(data.error)
-        
-        // Group rentals by equipment
-        const rentalsByEquip = data.reduce((acc: RentalsByEquipment, rental: any) => {
-          const equipmentName = rental.equipment
-          if (!acc[equipmentName]) {
-            acc[equipmentName] = {
-              name: equipmentName,
-              rentals: []
-            }
-          }
-          
-          acc[equipmentName].rentals.push({
-            id: rental.id,
-            customerName: rental.customerName,
-            equipment: [{ id: '1', name: rental.equipment }],
-            startDate: new Date(rental.startDate),
-            endDate: new Date(rental.endDate),
-            status: rental.status
-          })
-          
-          return acc
-        }, {})
-        
-        setRentalsByEquipment(rentalsByEquip)
-        setLoading(false)
-      } catch (error) {
-        console.error('Error fetching rentals:', error)
-        toast.error('Failed to load rentals')
-        setLoading(false)
-      }
-    }
-
-    fetchRentals()
-  }, [])
-
-  useEffect(() => {
     const fetchCalendarData = async () => {
       try {
+        setLoading(true)
         const response = await fetch('/api/calendar')
         const data = await response.json()
         
         if (!response.ok) throw new Error(data.error)
         
-        const processedRentals = data.rentalsByEquipment
-        Object.values(processedRentals).forEach((equipment: any) => {
-          if (equipment.rentals && Array.isArray(equipment.rentals)) {
-            equipment.rentals.forEach((rental: RentalEvent) => {
-              rental.color = getCustomerColor(rental.customerName)
-            })
-          }
-        })
+        // Sort equipment by name to ensure consistent order
+        const sortedEquipment = Object.entries(data.rentalsByEquipment as RentalsByEquipment)
+          .sort(([nameA], [nameB]) => nameA.localeCompare(nameB))
+          .reduce((acc, [key, value]: [string, EquipmentRentals]) => {
+            // Add color to rentals
+            if (value.rentals && Array.isArray(value.rentals)) {
+              value.rentals.forEach((rental: RentalEvent) => {
+                rental.color = getCustomerColor(rental.customerName)
+              })
+            }
+            acc[key] = value
+            return acc
+          }, {} as RentalsByEquipment)
         
         setTodaySchedule(data.todaySchedule)
         setUpcomingReturns(data.upcomingReturns)
-        setRentalsByEquipment(processedRentals)
+        setRentalsByEquipment(sortedEquipment)
       } catch (error) {
         console.error('Error fetching calendar data:', error)
         toast.error('Failed to load calendar data')
@@ -308,35 +272,38 @@ export default function CalendarPage() {
               </CardContent>
             </Card>
           ) : (
-            Object.entries(rentalsByEquipment).map(([equipmentId, { name, rentals }]) => (
-              <Card key={equipmentId} className="w-full">
-                <CardHeader className="pb-4">
-                  <CardTitle>{name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Calendar 
-                    mode="single" 
-                    selected={undefined}
-                    onSelect={setDate} 
-                    className="rounded-md border w-full"
-                    classNames={{
-                      day: "h-9 w-9 p-0 font-normal",
-                      day_today: "",
-                      day_selected: "",
-                      day_range_middle: "rounded-none",
-                      day_hidden: "invisible",
-                      nav_button_previous: "absolute left-1",
-                      nav_button_next: "absolute right-1",
-                      head_cell: "text-muted-foreground font-medium",
-                      cell: "h-9 w-9 text-center text-sm relative p-0 focus-within:relative focus-within:z-20",
-                    }}
-                    components={{
-                      DayContent: ({ date: day }) => getDayContent(day, rentals)
-                    }}
-                  />
-                </CardContent>
-              </Card>
-            ))
+            // Ensure consistent order by using sorted entries
+            Object.entries(rentalsByEquipment)
+              .sort(([nameA], [nameB]) => nameA.localeCompare(nameB))
+              .map(([equipmentId, { name, rentals }]) => (
+                <Card key={equipmentId} className="w-full">
+                  <CardHeader className="pb-4">
+                    <CardTitle>{name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Calendar 
+                      mode="single" 
+                      selected={undefined}
+                      onSelect={setDate} 
+                      className="rounded-md border w-full"
+                      classNames={{
+                        day: "h-9 w-9 p-0 font-normal",
+                        day_today: "",
+                        day_selected: "",
+                        day_range_middle: "rounded-none",
+                        day_hidden: "invisible",
+                        nav_button_previous: "absolute left-1",
+                        nav_button_next: "absolute right-1",
+                        head_cell: "text-muted-foreground font-medium",
+                        cell: "h-9 w-9 text-center text-sm relative p-0 focus-within:relative focus-within:z-20",
+                      }}
+                      components={{
+                        DayContent: ({ date: day }) => getDayContent(day, rentals)
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              ))
           )}
         </div>
 
