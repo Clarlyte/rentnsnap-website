@@ -45,10 +45,10 @@ export default function DashboardPage() {
 
   return (
     <DashboardShell>
-      <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between mb-8">
+      <div className="flex flex-col space-y-6 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Hello Jane,</h1>
         <div className="flex flex-col sm:flex-row gap-4">
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/dashboard/rentals/create-rental">
               <Plus className="mr-2 h-4 w-4" />
               New Rental
@@ -79,9 +79,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-6">
+      <div className="space-y-8">
         {/* Top Stats Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             title="Rent received"
             value={rentalData.rentReceived}
@@ -112,7 +112,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Cashflow Chart */}
-        <div className="overflow-hidden">
+        <div className="overflow-hidden rounded-lg border bg-card p-6">
           <CashflowChart
             data={{
               income: 20500,
@@ -124,19 +124,21 @@ export default function DashboardPage() {
         </div>
 
         {/* Bottom Section */}
-        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-[2fr_1fr]">
+        <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-[2fr_1fr]">
           {/* Expense Categories */}
-          <ExpenseCategories categories={expenseCategories} />
+          <div className="rounded-lg border bg-card p-6">
+            <ExpenseCategories categories={expenseCategories} />
+          </div>
 
           {/* Right Side Cards */}
           <div className="space-y-6">
             {/* Upgrade Card */}
-            <div className="rounded-lg bg-blue-600 p-6 text-white hover:bg-blue-700 transition-colors cursor-pointer">
-              <div className="mb-4 text-center">
-                <div className="mb-2 text-4xl">⚡</div>
+            <div className="rounded-lg bg-blue-600 p-8 text-white hover:bg-blue-700 transition-colors cursor-pointer">
+              <div className="mb-6 text-center">
+                <div className="mb-4 text-4xl">⚡</div>
                 <h3 className="text-xl font-bold">UPGRADE TO PRO</h3>
               </div>
-              <p className="mb-4 text-center text-sm text-blue-100">
+              <p className="mb-6 text-center text-sm text-blue-100">
                 Get access to more units and additional accounting tools like bank feeds to make tax time a breeze!
               </p>
               <Button variant="secondary" className="w-full bg-white text-blue-600 hover:bg-blue-50">
@@ -146,13 +148,13 @@ export default function DashboardPage() {
 
             {/* Online Rent Collection */}
             <div className="rounded-lg border bg-card p-6 hover:shadow-md transition-shadow">
-              <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <h3 className="font-semibold">Online rent collection</h3>
                 <Badge variant="outline" className="w-fit bg-emerald-50 text-emerald-700 border-emerald-200">
                   ENABLED
                 </Badge>
               </div>
-              <div className="grid gap-4">
+              <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
                   <div>
                     <div className="text-sm text-muted-foreground">2 SCHEDULED</div>
@@ -175,13 +177,13 @@ export default function DashboardPage() {
 
             {/* Equipment Status */}
             <div className="rounded-lg border bg-card p-6 hover:shadow-md transition-shadow">
-              <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <h3 className="font-semibold">Equipment Status</h3>
                 <Button variant="link" className="h-auto p-0 text-blue-600 hover:text-blue-700 w-fit">
                   View all
                 </Button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Available</span>
                   <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">

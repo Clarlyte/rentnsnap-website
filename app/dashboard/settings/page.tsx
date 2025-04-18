@@ -15,35 +15,35 @@ export default function SettingsPage() {
     <DashboardShell>
       <DashboardHeader heading="Settings" text="Manage your account and application settings" />
 
-      <Tabs defaultValue="general" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="team">Team</TabsTrigger>
+      <Tabs defaultValue="general" className="space-y-6">
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="general" className="flex-1 sm:flex-none">General</TabsTrigger>
+          <TabsTrigger value="billing" className="flex-1 sm:flex-none">Billing</TabsTrigger>
+          <TabsTrigger value="notifications" className="flex-1 sm:flex-none">Notifications</TabsTrigger>
+          <TabsTrigger value="team" className="flex-1 sm:flex-none">Team</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="space-y-4">
+        <TabsContent value="general" className="space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle>Business Information</CardTitle>
               <CardDescription>Update your business details and preferences</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
+            <CardContent className="space-y-6">
+              <div className="grid gap-3">
                 <Label htmlFor="businessName">Business Name</Label>
                 <Input id="businessName" placeholder="Your business name" defaultValue="Rent n' Snap" />
               </div>
-              <div className="grid gap-2">
+              <div className="grid gap-3">
                 <Label htmlFor="address">Business Address</Label>
                 <Input id="address" placeholder="Your business address" />
               </div>
-              <div className="grid gap-2">
+              <div className="grid gap-3">
                 <Label htmlFor="phone">Contact Number</Label>
                 <Input id="phone" placeholder="Your contact number" />
               </div>
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1">
                   <Label>Dark Mode</Label>
                   <p className="text-sm text-muted-foreground">Enable dark mode for the application</p>
                 </div>
@@ -53,42 +53,42 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="billing" className="space-y-4">
+        <TabsContent value="billing" className="space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle>Subscription Plan</CardTitle>
               <CardDescription>Manage your subscription and billing details</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between border-b pb-4">
+            <CardContent className="space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-6">
                 <div>
                   <p className="font-medium">Current Plan</p>
                   <p className="text-sm text-muted-foreground">Professional Plan</p>
                 </div>
-                <Badge>Active</Badge>
+                <Badge className="mt-2 sm:mt-0">Active</Badge>
               </div>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">Next billing date: April 1, 2024</p>
-                <Button>Upgrade Plan</Button>
+                <Button className="w-full sm:w-auto">Upgrade Plan</Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="notifications" className="space-y-4">
+        <TabsContent value="notifications" className="space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle>Notification Preferences</CardTitle>
               <CardDescription>Choose what notifications you want to receive</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               {[
                 "Email notifications for new rentals",
                 "SMS alerts for overdue returns",
                 "Daily summary reports",
                 "Weekly analytics reports",
               ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between">
+                <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <Label htmlFor={`notify-${i}`}>{item}</Label>
                   <Switch id={`notify-${i}`} defaultChecked={i < 2} />
                 </div>
@@ -97,23 +97,23 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="team" className="space-y-4">
+        <TabsContent value="team" className="space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle>Team Members</CardTitle>
               <CardDescription>Manage your team and their permissions</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-6 last:border-0 last:pb-0 gap-4">
                   <div>
                     <p className="font-medium">Team Member {i}</p>
                     <p className="text-sm text-muted-foreground">team{i}@rentnsnap.com</p>
                   </div>
-                  <Badge variant={i === 1 ? "default" : "secondary"}>{i === 1 ? "Admin" : "Staff"}</Badge>
+                  <Badge variant={i === 1 ? "default" : "secondary"} className="mt-2 sm:mt-0">{i === 1 ? "Admin" : "Staff"}</Badge>
                 </div>
               ))}
-              <Button className="w-full">Add Team Member</Button>
+              <Button className="w-full sm:w-auto">Add Team Member</Button>
             </CardContent>
           </Card>
         </TabsContent>

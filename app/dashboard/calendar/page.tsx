@@ -34,16 +34,6 @@ interface RentalsByEquipment {
   [key: string]: EquipmentRentals
 }
 
-interface Rental {
-  rental_id: string;
-  customerName: string;
-  equipment: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  amount: number;
-}
-
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [formLink, setFormLink] = useState("")
@@ -97,8 +87,16 @@ export default function CalendarPage() {
         if (!response.ok) throw new Error(data.error)
         
         // Filter out cancelled rentals and map to calendar events
-        const activeRentals = data.filter((rental: Rental) => rental.status !== 'Cancelled')
-        const events = activeRentals.map((rental: Rental) => ({
+        const activeRentals = data.filter((rental: { status: string }) => rental.status !== 'Cancelled')
+        const events = activeRentals.map((rental: { 
+          rental_id: string
+          customerName: string
+          equipment: string
+          startDate: string
+          endDate: string
+          status: string
+          amount: number
+        }) => ({
           id: rental.rental_id,
           title: `${rental.customerName} - ${rental.equipment}`,
           start: new Date(rental.startDate),
@@ -257,7 +255,7 @@ export default function CalendarPage() {
   return (
     <DashboardShell>
       <DashboardHeader heading="Calendar" text="View and manage rental schedules">
-        <div className="flex gap-2">
+        <div className="flex gap-4">
           <Button asChild>
             <Link href="/dashboard/rentals/create-rental">
               <Plus className="mr-2 h-4 w-4" /> New Rental
@@ -269,24 +267,24 @@ export default function CalendarPage() {
         </div>
       </DashboardHeader>
 
-      <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
-        <div className="grid gap-4 auto-rows-min grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-8 md:grid-cols-[2fr_1fr]">
+        <div className="grid gap-6 auto-rows-min grid-cols-1 lg:grid-cols-2">
           {loading ? (
             <Card className="lg:col-span-2">
-              <CardContent className="py-8">
+              <CardContent className="p-8">
                 <div className="text-center text-muted-foreground">Loading calendars...</div>
               </CardContent>
             </Card>
           ) : Object.entries(rentalsByEquipment).length === 0 ? (
             <Card className="lg:col-span-2">
-              <CardContent className="py-8">
+              <CardContent className="p-8">
                 <div className="text-center text-muted-foreground">No equipment found. Add some equipment to view calendars.</div>
               </CardContent>
             </Card>
           ) : (
             Object.entries(rentalsByEquipment).map(([equipmentId, { name, rentals }]) => (
               <Card key={equipmentId} className="w-full">
-                <CardHeader>
+                <CardHeader className="pb-4">
                   <CardTitle>{name}</CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -305,19 +303,19 @@ export default function CalendarPage() {
           )}
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle>Today's Schedule</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               {loading ? (
                 <div className="text-center text-muted-foreground">Loading schedule...</div>
               ) : todaySchedule.length > 0 ? (
                 <div className="space-y-4">
                   {todaySchedule.map((rental) => (
                     <div key={rental.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                      <div>
+                      <div className="space-y-1">
                         <p className="font-medium">{rental.customerName}</p>
                         <p className="text-sm text-muted-foreground">
                           {rental.equipment.map(e => e.name).join(', ')}
@@ -339,17 +337,17 @@ export default function CalendarPage() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle>Upcoming Rentals</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               {loading ? (
                 <div className="text-center text-muted-foreground">Loading upcoming rentals...</div>
               ) : getUpcomingRentals().length > 0 ? (
                 <div className="space-y-4">
                   {getUpcomingRentals().map((rental) => (
                     <div key={rental.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                      <div>
+                      <div className="space-y-1">
                         <p className="font-medium">{rental.customerName}</p>
                         <p className="text-sm text-muted-foreground">
                           {rental.equipment.map(e => e.name).join(', ')}
@@ -369,17 +367,17 @@ export default function CalendarPage() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-4">
               <CardTitle>Incoming Returns</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               {loading ? (
                 <div className="text-center text-muted-foreground">Loading returns...</div>
               ) : getIncomingReturns().length > 0 ? (
                 <div className="space-y-4">
                   {getIncomingReturns().map((rental) => (
                     <div key={rental.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                      <div>
+                      <div className="space-y-1">
                         <p className="font-medium">{rental.customerName}</p>
                         <p className="text-sm text-muted-foreground">
                           {rental.equipment.map(e => e.name).join(', ')}

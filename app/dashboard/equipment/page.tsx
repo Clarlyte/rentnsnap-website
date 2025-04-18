@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search } from "lucide-react"
+import { Plus, Search, Camera } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -66,16 +66,16 @@ export default function EquipmentPage() {
   return (
     <DashboardShell>
       <DashboardHeader heading="Equipment" text="Manage your rental equipment">
-        <Button asChild>
+        <Button asChild className="w-full sm:w-auto">
           <Link href="/dashboard/equipment/new">
             <Plus className="mr-2 h-4 w-4" /> Add Equipment
           </Link>
         </Button>
       </DashboardHeader>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 max-w-sm">
+          <div className="flex-1 w-full">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -101,16 +101,16 @@ export default function EquipmentPage() {
         </div>
 
         {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map(i => (
               <Card key={i} className="animate-pulse">
                 <div className="aspect-video bg-muted" />
-                <CardHeader className="space-y-2">
+                <CardHeader className="space-y-3">
                   <div className="h-4 w-2/3 bg-muted rounded" />
                   <div className="h-3 w-1/2 bg-muted rounded" />
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="h-3 w-full bg-muted rounded" />
                     <div className="h-3 w-3/4 bg-muted rounded" />
                   </div>
@@ -120,16 +120,33 @@ export default function EquipmentPage() {
           </div>
         ) : filteredEquipment.length === 0 ? (
           <Card>
-            <CardContent className="py-8 text-center">
-              <p className="text-muted-foreground">
-                {equipment.length === 0 
-                  ? "No equipment found. Add some equipment to get started."
-                  : "No equipment matches your search."}
-              </p>
+            <CardContent className="py-16 text-center">
+              <div className="flex flex-col items-center justify-center">
+                <div className="bg-muted rounded-full p-6 mb-6">
+                  <Camera className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold mb-3">
+                  {equipment.length === 0 
+                    ? "No equipment added yet"
+                    : "No equipment matches your search"}
+                </h3>
+                <p className="text-muted-foreground mb-6 max-w-md">
+                  {equipment.length === 0 
+                    ? "Start by adding your first piece of equipment to your inventory."
+                    : "Try adjusting your search or filter criteria."}
+                </p>
+                {equipment.length === 0 && (
+                  <Button asChild>
+                    <Link href="/dashboard/equipment/new">
+                      <Plus className="mr-2 h-4 w-4" /> Add Equipment
+                    </Link>
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredEquipment.map((item) => (
               <Card key={item.equipment_id} className="overflow-hidden flex flex-col">
                 <div className="aspect-video bg-muted">
@@ -141,11 +158,11 @@ export default function EquipmentPage() {
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full">
-                      <p className="text-muted-foreground">No image</p>
+                      <Camera className="h-8 w-8 text-muted-foreground" />
                     </div>
                   )}
                 </div>
-                <CardHeader>
+                <CardHeader className="pb-4">
                   <div className="flex justify-between items-start">
                     <div>
                       <CardTitle className="text-base">{item.name}</CardTitle>
@@ -156,35 +173,33 @@ export default function EquipmentPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="flex-grow">
-                  <div className="space-y-2">
+                <CardContent className="flex-grow space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm">Status</span>
+                    <span className={`font-medium ${
+                      item.status === 'Available' ? 'text-green-600' : 
+                      item.status === 'Rented' ? 'text-orange-600' :
+                      item.status === 'In Repair' ? 'text-yellow-600' :
+                      item.status === 'Reserved' ? 'text-blue-600' :
+                      'text-red-600'
+                    }`}>
+                      {item.status}
+                    </span>
+                  </div>
+                  {item.rental_rates?.length > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-sm">Status</span>
-                      <span className={`font-medium ${
-                        item.status === 'Available' ? 'text-green-600' : 
-                        item.status === 'Rented' ? 'text-orange-600' :
-                        item.status === 'In Repair' ? 'text-yellow-600' :
-                        item.status === 'Reserved' ? 'text-blue-600' :
-                        'text-red-600'
-                      }`}>
-                        {item.status}
+                      <span className="text-sm">Daily Rate</span>
+                      <span className="font-medium">
+                        From ₱{Math.min(...item.rental_rates.map(rate => rate.daily_rate))}
                       </span>
                     </div>
-                    {item.rental_rates?.length > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-sm">Daily Rate</span>
-                        <span className="font-medium">
-                          From ₱{Math.min(...item.rental_rates.map(rate => rate.daily_rate))}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-sm">Type</span>
-                      <span className="font-medium capitalize">{item.type}</span>
-                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-sm">Type</span>
+                    <span className="font-medium capitalize">{item.type}</span>
                   </div>
                 </CardContent>
-                <CardFooter className="flex gap-2">
+                <CardFooter className="flex gap-4">
                   <Button variant="outline" className="flex-1" asChild>
                     <Link href={`/dashboard/equipment/${item.equipment_id}`}>
                       Edit

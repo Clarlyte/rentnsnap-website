@@ -21,8 +21,8 @@ export function DashboardShell({ children }: DashboardShellProps) {
           <aside className="hidden w-[200px] flex-col md:flex lg:w-[240px]">
             <DashboardNav />
           </aside>
-          <main className="flex w-full flex-1 flex-col overflow-hidden py-6">
-            <div className="mx-auto w-full max-w-7xl">
+          <main className="flex w-full flex-1 flex-col overflow-hidden py-8">
+            <div className="mx-auto w-full max-w-7xl space-y-8">
               {children}
             </div>
           </main>
