@@ -78,6 +78,41 @@ export default function CalendarPage() {
     )
   }
 
+  const getDayContent = (day: Date, rentals: RentalEvent[]) => {
+    // Convert the input day to midnight for proper comparison
+    const targetDate = new Date(day)
+    targetDate.setHours(0, 0, 0, 0)
+
+    const rental = rentals.find(rental => {
+      const startDate = new Date(rental.startDate)
+      const endDate = new Date(rental.endDate)
+      startDate.setHours(0, 0, 0, 0)
+      endDate.setHours(0, 0, 0, 0)
+      
+      return targetDate >= startDate && targetDate <= endDate
+    })
+
+    if (!rental) {
+      return (
+        <div className="h-full w-full flex items-center justify-center text-foreground hover:bg-muted">
+          {day.getDate()}
+        </div>
+      )
+    }
+
+    return (
+      <div
+        className="h-full w-full flex items-center justify-center text-white rounded-sm"
+        style={{ 
+          backgroundColor: rental.status === 'Reserved' ? '#FF9800' : '#2196F3',
+          opacity: rental.status === 'Reserved' ? '0.8' : '1'
+        }}
+      >
+        {day.getDate()}
+      </div>
+    )
+  }
+
   useEffect(() => {
     const fetchRentals = async () => {
       try {
@@ -86,31 +121,34 @@ export default function CalendarPage() {
         
         if (!response.ok) throw new Error(data.error)
         
-        // Filter out cancelled rentals and map to calendar events
-        const activeRentals = data.filter((rental: { status: string }) => rental.status !== 'Cancelled')
-        const events = activeRentals.map((rental: { 
-          rental_id: string
-          customerName: string
-          equipment: string
-          startDate: string
-          endDate: string
-          status: string
-          amount: number
-        }) => ({
-          id: rental.rental_id,
-          title: `${rental.customerName} - ${rental.equipment}`,
-          start: new Date(rental.startDate),
-          end: new Date(rental.endDate),
-          status: rental.status,
-          amount: rental.amount,
-          customerName: rental.customerName,
-          equipment: rental.equipment
-        }))
+        // Group rentals by equipment
+        const rentalsByEquip = data.reduce((acc: RentalsByEquipment, rental: any) => {
+          const equipmentName = rental.equipment
+          if (!acc[equipmentName]) {
+            acc[equipmentName] = {
+              name: equipmentName,
+              rentals: []
+            }
+          }
+          
+          acc[equipmentName].rentals.push({
+            id: rental.id,
+            customerName: rental.customerName,
+            equipment: [{ id: '1', name: rental.equipment }],
+            startDate: new Date(rental.startDate),
+            endDate: new Date(rental.endDate),
+            status: rental.status
+          })
+          
+          return acc
+        }, {})
         
-        setEvents(events)
+        setRentalsByEquipment(rentalsByEquip)
+        setLoading(false)
       } catch (error) {
         console.error('Error fetching rentals:', error)
         toast.error('Failed to load rentals')
+        setLoading(false)
       }
     }
 
@@ -147,26 +185,6 @@ export default function CalendarPage() {
 
     fetchCalendarData()
   }, [])
-
-  const getDayContent = (day: Date, rentals: RentalEvent[]) => {
-    const rental = getRentalForDate(day, rentals)
-    if (!rental) {
-      return (
-        <div className="h-full w-full flex items-center justify-center">
-          {day.getDate()}
-        </div>
-      )
-    }
-
-    return (
-      <div
-        className="h-full w-full flex items-center justify-center text-white"
-        style={{ backgroundColor: rental.color }}
-      >
-        {day.getDate()}
-      </div>
-    )
-  }
 
   const generateFormLink = () => {
     const token = Math.random().toString(36).substring(2, 15)
@@ -252,6 +270,14 @@ export default function CalendarPage() {
       .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime())
   }
 
+  // Add a function to get rental dates for modifiers
+  const getRentalDates = (rentals: RentalEvent[]) => {
+    return rentals.map(rental => ({
+      from: new Date(rental.startDate),
+      to: new Date(rental.endDate)
+    }))
+  }
+
   return (
     <DashboardShell>
       <DashboardHeader heading="Calendar" text="View and manage rental schedules">
@@ -290,9 +316,20 @@ export default function CalendarPage() {
                 <CardContent>
                   <Calendar 
                     mode="single" 
-                    selected={date} 
+                    selected={undefined}
                     onSelect={setDate} 
                     className="rounded-md border w-full"
+                    classNames={{
+                      day: "h-9 w-9 p-0 font-normal",
+                      day_today: "",
+                      day_selected: "",
+                      day_range_middle: "rounded-none",
+                      day_hidden: "invisible",
+                      nav_button_previous: "absolute left-1",
+                      nav_button_next: "absolute right-1",
+                      head_cell: "text-muted-foreground font-medium",
+                      cell: "h-9 w-9 text-center text-sm relative p-0 focus-within:relative focus-within:z-20",
+                    }}
                     components={{
                       DayContent: ({ date: day }) => getDayContent(day, rentals)
                     }}
@@ -352,9 +389,20 @@ export default function CalendarPage() {
                         <p className="text-sm text-muted-foreground">
                           {rental.equipment.map(e => e.name).join(', ')}
                         </p>
-                        <p className="text-sm text-muted-foreground">
-                          Starts in {getDaysUntilStart(rental.startDate)} day{getDaysUntilStart(rental.startDate) !== 1 ? 's' : ''}
-                        </p>
+                        <div className="flex flex-col gap-0.5">
+                          <p className="text-sm text-muted-foreground">
+                            Start: {new Date(rental.startDate).toLocaleString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric',
+                              hour: '2-digit', 
+                              minute: '2-digit'
+                            })}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            (Starts in {getDaysUntilStart(rental.startDate)} day{getDaysUntilStart(rental.startDate) !== 1 ? 's' : ''})
+                          </p>
+                        </div>
                       </div>
                       <Badge>Reserved</Badge>
                     </div>
@@ -382,9 +430,20 @@ export default function CalendarPage() {
                         <p className="text-sm text-muted-foreground">
                           {rental.equipment.map(e => e.name).join(', ')}
                         </p>
-                        <p className="text-sm text-muted-foreground">
-                          Due in {getDaysUntil(rental.endDate)} day{getDaysUntil(rental.endDate) !== 1 ? 's' : ''}
-                        </p>
+                        <div className="flex flex-col gap-0.5">
+                          <p className="text-sm text-muted-foreground">
+                            Return: {new Date(rental.endDate).toLocaleString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric',
+                              hour: '2-digit', 
+                              minute: '2-digit'
+                            })}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            (Due in {getDaysUntil(rental.endDate)} day{getDaysUntil(rental.endDate) !== 1 ? 's' : ''})
+                          </p>
+                        </div>
                       </div>
                       <Badge variant={rental.status === 'Active' ? 'secondary' : 'default'}>
                         {rental.status}
