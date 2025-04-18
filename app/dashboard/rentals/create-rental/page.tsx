@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -12,11 +12,30 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, ArrowRight, CalendarIcon, Check, ChevronRight, Search } from "lucide-react"
+import { ArrowLeft, ArrowRight, CalendarIcon, Check, ChevronRight, Search, Upload, Loader2 } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
+import dynamic from 'next/dynamic'
+
+// Import the signature pad component with no SSR
+const SignaturePad = dynamic(
+  () => import('react-signature-canvas').then((mod) => {
+    const SignaturePad = mod.default;
+    return function SignaturePadWrapper(props: any) {
+      return (
+        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+          <SignaturePad {...props} />
+        </div>
+      );
+    };
+  }),
+  {
+    ssr: false,
+    loading: () => <div className="h-full w-full bg-white" />
+  }
+);
 
 interface CustomerFormData {
   first_name: string
@@ -31,6 +50,14 @@ interface SelectedEquipment {
   name: string
   type: string
   daily_rate: number
+}
+
+interface VerificationData {
+  idType: string
+  idNumber: string
+  idImage: File | null
+  selfieWithId: File | null
+  signature: string
 }
 
 export default function CreateRentalPage() {
@@ -54,6 +81,22 @@ export default function CreateRentalPage() {
   const [notes, setNotes] = useState("")
   const [equipment, setEquipment] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [verificationData, setVerificationData] = useState<VerificationData>({
+    idType: "",
+    idNumber: "",
+    idImage: null,
+    selfieWithId: null,
+    signature: ""
+  })
+  const signaturePadRef = useRef<any>(null)
+  const [isUploading, setIsUploading] = useState<{
+    idImage: boolean;
+    selfieWithId: boolean;
+  }>({
+    idImage: false,
+    selfieWithId: false
+  });
+  const [isSavingSignature, setIsSavingSignature] = useState(false);
 
   const calculateDuration = () => {
     if (!startDate || !endDate || !startTime || !endTime) return null;
@@ -130,9 +173,98 @@ export default function CreateRentalPage() {
     return selectedEquipment.reduce((total, item) => total + (item.daily_rate * durationInDays), 0);
   }
 
+  const handleFileUpload = (type: 'idImage' | 'selfieWithId') => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      setIsUploading(prev => ({ ...prev, [type]: true }));
+      
+      // Create a FormData instance
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('type', type) // Add type to identify the file
+
+      // Upload to your storage service
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload file')
+      }
+
+      const data = await response.json()
+      
+      setVerificationData(prev => ({
+        ...prev,
+        [type]: file
+      }))
+
+      toast.success(`${type === 'idImage' ? 'ID' : 'Selfie'} uploaded successfully`)
+    } catch (error) {
+      console.error('Error uploading file:', error)
+      toast.error('Failed to upload file. Please try again.')
+    } finally {
+      setIsUploading(prev => ({ ...prev, [type]: false }));
+    }
+  }
+
+  const handleSignatureSave = async () => {
+    const signaturePad = signaturePadRef.current;
+    if (!signaturePad) {
+      toast.error('Signature pad not initialized');
+      return;
+    }
+
+    try {
+      setIsSavingSignature(true);
+      
+      if (signaturePad.isEmpty()) {
+        toast.error('Please provide a signature before saving');
+        return;
+      }
+
+      // Get the signature data as PNG with transparent background
+      const trimmedDataURL = signaturePad.getTrimmedCanvas().toDataURL('image/png');
+      
+      setVerificationData(prev => ({
+        ...prev,
+        signature: trimmedDataURL
+      }));
+      
+      toast.success('Signature saved successfully');
+    } catch (error) {
+      console.error('Error saving signature:', error);
+      toast.error('Failed to save signature. Please try again.');
+    } finally {
+      setIsSavingSignature(false);
+    }
+  };
+
+  const handleSignatureClear = () => {
+    const signaturePad = signaturePadRef.current;
+    if (signaturePad) {
+      signaturePad.clear();
+      setVerificationData(prev => ({
+        ...prev,
+        signature: ""
+      }));
+      toast.success('Signature cleared');
+    } else {
+      toast.error('Signature pad not initialized');
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true)
+
+      // Validate verification data
+      if (!verificationData.idType || !verificationData.idNumber || !verificationData.idImage || !verificationData.selfieWithId || !verificationData.signature) {
+        throw new Error('Please complete all verification requirements')
+      }
 
       // 1. Create or get customer
       const customerResponse = await fetch("/api/customers", {
@@ -199,6 +331,20 @@ export default function CreateRentalPage() {
 
       await Promise.all(equipmentPromises)
 
+      // Upload verification data
+      const verificationResponse = await fetch("/api/verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rental_id,
+          ...verificationData
+        })
+      })
+
+      if (!verificationResponse.ok) {
+        throw new Error('Failed to save verification data')
+      }
+
       toast.success("Rental created successfully!")
       router.push("/dashboard/rentals")
       
@@ -236,6 +382,23 @@ export default function CreateRentalPage() {
       className="w-[120px]"
     />
   );
+
+  const renderDuration = () => {
+    const duration = calculateDuration();
+    if (!duration) return null;
+    
+    return (
+      <>
+        <p className="font-medium">
+          {duration.days} days
+          {duration.hours > 0 ? `, ${duration.hours} hours` : ''}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {duration.formattedStart} - {duration.formattedEnd}
+        </p>
+      </>
+    );
+  };
 
   return (
     <DashboardShell>
@@ -401,19 +564,7 @@ export default function CreateRentalPage() {
                   <div className="grid gap-2">
                     <Label>Rental Duration</Label>
                     <div className="p-3 bg-muted rounded-md">
-                      {calculateDuration() ? (
-                        <>
-                          <p className="font-medium">
-                            {calculateDuration()?.days} days
-                            {calculateDuration()?.hours > 0 ? `, ${calculateDuration()?.hours} hours` : ''}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {calculateDuration()?.formattedStart} - {calculateDuration()?.formattedEnd}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Select start and end dates to see duration</p>
-                      )}
+                      {renderDuration()}
                     </div>
                   </div>
 
@@ -660,7 +811,7 @@ export default function CreateRentalPage() {
                 <CardContent className="space-y-4">
                   <div className="grid gap-2">
                     <Label htmlFor="id-type">ID Type</Label>
-                    <Select>
+                    <Select value={verificationData.idType} onValueChange={(value) => setVerificationData(prev => ({ ...prev, idType: value }))}>
                       <SelectTrigger id="id-type">
                         <SelectValue placeholder="Select ID type" />
                       </SelectTrigger>
@@ -675,20 +826,91 @@ export default function CreateRentalPage() {
 
                   <div className="grid gap-2">
                     <Label htmlFor="id-number">ID Number</Label>
-                    <Input id="id-number" placeholder="Enter ID number" />
+                    <Input 
+                      id="id-number" 
+                      placeholder="Enter ID number" 
+                      value={verificationData.idNumber}
+                      onChange={(e) => setVerificationData(prev => ({ ...prev, idNumber: e.target.value }))}
+                    />
                   </div>
 
                   <div className="grid gap-2">
                     <Label>Upload ID Document</Label>
-                    <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Drag and drop your file here, or click to browse
+                    <div className="border-2 border-dashed rounded-md p-6">
+                      <input
+                        type="file"
+                        id="id-image"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileUpload('idImage')}
+                        disabled={isUploading.idImage}
+                      />
+                      <label
+                        htmlFor="id-image"
+                        className="flex flex-col items-center justify-center cursor-pointer"
+                      >
+                        {isUploading.idImage ? (
+                          <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                        ) : (
+                          <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                        )}
+                        <p className="text-sm text-muted-foreground text-center mb-2">
+                          {isUploading.idImage 
+                            ? "Uploading..." 
+                            : verificationData.idImage 
+                              ? (verificationData.idImage as File).name 
+                              : "Click to upload ID"}
                         </p>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          disabled={isUploading.idImage}
+                          onClick={() => document.getElementById('id-image')?.click()}
+                        >
                           Choose File
                         </Button>
-                      </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label>Upload Selfie with ID</Label>
+                    <div className="border-2 border-dashed rounded-md p-6">
+                      <input
+                        type="file"
+                        id="selfie-image"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFileUpload('selfieWithId')}
+                        disabled={isUploading.selfieWithId}
+                      />
+                      <label
+                        htmlFor="selfie-image"
+                        className="flex flex-col items-center justify-center cursor-pointer"
+                      >
+                        {isUploading.selfieWithId ? (
+                          <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                        ) : (
+                          <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                        )}
+                        <p className="text-sm text-muted-foreground text-center mb-2">
+                          {isUploading.selfieWithId 
+                            ? "Uploading..." 
+                            : verificationData.selfieWithId 
+                              ? (verificationData.selfieWithId as File).name 
+                              : "Click to upload selfie with ID"}
+                        </p>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          disabled={isUploading.selfieWithId}
+                          onClick={() => document.getElementById('selfie-image')?.click()}
+                        >
+                          Choose File
+                        </Button>
+                      </label>
                     </div>
                   </div>
                 </CardContent>
@@ -700,13 +922,46 @@ export default function CreateRentalPage() {
                   <CardDescription>Collect customer's electronic signature</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="border rounded-md p-4 h-40 flex items-center justify-center bg-muted">
-                    <p className="text-sm text-muted-foreground">Signature pad will appear here</p>
+                  <div className="border rounded-md p-4 h-40 bg-white">
+                    <SignaturePad
+                      ref={signaturePadRef}
+                      penColor="black"
+                      canvasProps={{
+                        className: "signature-canvas",
+                        style: {
+                          width: '100%',
+                          height: '100%',
+                          maxWidth: '100%',
+                          maxHeight: '100%',
+                          border: 'none',
+                          backgroundColor: 'white'
+                        }
+                      }}
+                    />
                   </div>
 
-                  <div className="flex justify-center">
-                    <Button variant="outline" size="sm">
-                      Clear Signature
+                  <div className="flex justify-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleSignatureClear}
+                      disabled={isSavingSignature}
+                    >
+                      Clear
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      onClick={handleSignatureSave}
+                      disabled={isSavingSignature}
+                    >
+                      {isSavingSignature ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Signature'
+                      )}
                     </Button>
                   </div>
                 </CardContent>
@@ -727,17 +982,7 @@ export default function CreateRentalPage() {
                     </div>
                     <div>
                       <h3 className="font-medium mb-2">Schedule</h3>
-                      {calculateDuration() ? (
-                        <>
-                          <p>{calculateDuration()?.formattedStart} - {calculateDuration()?.formattedEnd}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {calculateDuration()?.days} days
-                            {calculateDuration()?.hours > 0 ? `, ${calculateDuration()?.hours} hours` : ''}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">Schedule not set</p>
-                      )}
+                      {renderDuration()}
                     </div>
                     <div>
                       <h3 className="font-medium mb-2">Total</h3>
@@ -789,7 +1034,17 @@ export default function CreateRentalPage() {
           )}
         </div>
       </div>
+      <style jsx global>{`
+        .signature-canvas {
+          touch-action: none !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
+        .signature-canvas > canvas {
+          width: 100% !important;
+          height: 100% !important;
+        }
+      `}</style>
     </DashboardShell>
   )
 }
-
