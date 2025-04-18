@@ -59,11 +59,12 @@ export default function RentalsPage() {
     fetchRentals()
   }, [])
 
-  const handleImageError = (e: any, customerName: string) => {
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>, customerName: string) => {
     console.error(`Error loading image for ${customerName}:`, e)
-    e.target.style.display = 'none'
-    const fallbackDiv = e.target.parentElement.querySelector('.fallback-icon')
-    if (fallbackDiv) {
+    const imgElement = e.target as HTMLImageElement
+    imgElement.style.display = 'none'
+    const fallbackDiv = imgElement.nextElementSibling as HTMLElement
+    if (fallbackDiv?.classList.contains('fallback-icon')) {
       fallbackDiv.style.display = 'flex'
     }
   }
@@ -141,10 +142,12 @@ export default function RentalsPage() {
                             alt={`${rental.customerName}'s ID verification`}
                             width={48}
                             height={48}
-                            className="object-cover"
+                            className="h-full w-full object-cover"
                             onError={(e) => handleImageError(e, rental.customerName)}
+                            unoptimized
+                            priority
                           />
-                          <div className="fallback-icon hidden absolute inset-0 bg-muted flex items-center justify-center">
+                          <div className="fallback-icon absolute inset-0 bg-muted items-center justify-center" style={{ display: 'none' }}>
                             <User className="h-6 w-6 text-muted-foreground" />
                           </div>
                         </>

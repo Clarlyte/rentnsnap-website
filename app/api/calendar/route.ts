@@ -50,7 +50,7 @@ export async function GET() {
         `${rental.customers.first_name} ${rental.customers.last_name}` : 
         'Unknown Customer',
       equipment: rental.rental_equipment
-        ?.map((re: any) => ({
+        ?.map((re: { equipment_id: string; equipment?: { name: string; type: string } }) => ({
           id: re.equipment_id,
           name: re.equipment?.name
         })) || [],
@@ -64,7 +64,7 @@ export async function GET() {
       acc[eq.equipment_id] = {
         name: eq.name,
         rentals: formattedRentals.filter(rental => 
-          rental.equipment.some(e => e.id === eq.equipment_id)
+          rental.equipment.some((e: { id: string }) => e.id === eq.equipment_id)
         )
       }
       return acc
