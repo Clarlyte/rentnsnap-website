@@ -108,22 +108,22 @@ export default function CalendarPage() {
       </DashboardHeader>
 
       <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
-        <div className="space-y-4">
+        <div className="grid gap-4 auto-rows-min grid-cols-1 lg:grid-cols-2">
           {loading ? (
-            <Card>
+            <Card className="lg:col-span-2">
               <CardContent className="py-8">
                 <div className="text-center text-muted-foreground">Loading calendars...</div>
               </CardContent>
             </Card>
           ) : Object.entries(rentalsByEquipment).length === 0 ? (
-            <Card>
+            <Card className="lg:col-span-2">
               <CardContent className="py-8">
                 <div className="text-center text-muted-foreground">No equipment found. Add some equipment to view calendars.</div>
               </CardContent>
             </Card>
           ) : (
             Object.entries(rentalsByEquipment).map(([equipmentId, { name, rentals }]) => (
-              <Card key={equipmentId}>
+              <Card key={equipmentId} className="w-full">
                 <CardHeader>
                   <CardTitle>{name}</CardTitle>
                 </CardHeader>
@@ -132,7 +132,7 @@ export default function CalendarPage() {
                     mode="single" 
                     selected={date} 
                     onSelect={setDate} 
-                    className="rounded-md border"
+                    className="rounded-md border w-full"
                     modifiers={{
                       booked: rentals.map(rental => new Date(rental.startDate))
                     }}
