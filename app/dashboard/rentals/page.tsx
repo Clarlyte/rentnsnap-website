@@ -8,8 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import { Plus, Search, Copy } from "lucide-react"
+import { Plus, Search, Copy, User } from "lucide-react"
 import { toast } from "sonner"
+import Image from "next/image"
 
 export default function RentalsPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -45,7 +46,7 @@ export default function RentalsPage() {
         
         if (!response.ok) throw new Error(data.error)
         
-        console.log('Fetched rentals:', data)
+        console.log('Received rentals data:', data)
         setRentals(data)
       } catch (error) {
         console.error('Error fetching rentals:', error)
@@ -57,6 +58,15 @@ export default function RentalsPage() {
 
     fetchRentals()
   }, [])
+
+  const handleImageError = (e: any, customerName: string) => {
+    console.error(`Error loading image for ${customerName}:`, e)
+    e.target.style.display = 'none'
+    const fallbackDiv = e.target.parentElement.querySelector('.fallback-icon')
+    if (fallbackDiv) {
+      fallbackDiv.style.display = 'flex'
+    }
+  }
 
   return (
     <DashboardShell>
@@ -106,11 +116,11 @@ export default function RentalsPage() {
           </p>
         </div>
 
-        <div className="border rounded-lg">
+        <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Rental ID</TableHead>
+                <TableHead>ID Verification</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Equipment</TableHead>
                 <TableHead>Start Date</TableHead>
@@ -123,9 +133,27 @@ export default function RentalsPage() {
               {rentals.map((rental) => (
                 <TableRow key={rental.id}>
                   <TableCell>
-                    <Link href={`/rental/${rental.id}`} className="text-blue-500 hover:underline">
-                      #RNT{String(rental.id).padStart(4, "0")}
-                    </Link>
+                    <div className="relative h-12 w-12 rounded-full overflow-hidden bg-muted">
+                      {rental.selfieUrl ? (
+                        <>
+                          <Image
+                            src={rental.selfieUrl}
+                            alt={`${rental.customerName}'s ID verification`}
+                            width={48}
+                            height={48}
+                            className="object-cover"
+                            onError={(e) => handleImageError(e, rental.customerName)}
+                          />
+                          <div className="fallback-icon hidden absolute inset-0 bg-muted flex items-center justify-center">
+                            <User className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 bg-muted flex items-center justify-center">
+                          <User className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>{rental.customerName}</TableCell>
                   <TableCell>{rental.equipment}</TableCell>

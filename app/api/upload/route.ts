@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(bytes)
 
     // Upload to Supabase Storage
-    const { data, error } = await supabase
+    const { data: uploadData, error: uploadError } = await supabase
       .storage
       .from('rental-documents')
       .upload(`${Date.now()}-${file.name}`, buffer, {
@@ -29,19 +29,26 @@ export async function POST(request: Request) {
         upsert: false
       })
 
-    if (error) {
-      throw error
+    if (uploadError) {
+      throw uploadError
     }
 
+    // Get the public URL for the uploaded file
+    const { data } = supabase
+      .storage
+      .from('rental-documents')
+      .getPublicUrl(uploadData.path)
+
     return NextResponse.json({ 
-      url: data.path,
+      url: data.publicUrl,
+      path: uploadData.path,
       message: 'File uploaded successfully' 
     })
 
   } catch (error) {
     console.error('Error uploading file:', error)
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { error: error instanceof Error ? error.message : 'Failed to upload file' },
       { status: 500 }
     )
   }

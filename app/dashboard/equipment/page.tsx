@@ -131,7 +131,7 @@ export default function EquipmentPage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredEquipment.map((item) => (
-              <Card key={item.equipment_id} className="overflow-hidden">
+              <Card key={item.equipment_id} className="overflow-hidden flex flex-col">
                 <div className="aspect-video bg-muted">
                   {item.image_url ? (
                     <img
@@ -149,14 +149,14 @@ export default function EquipmentPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <CardTitle className="text-base">{item.name}</CardTitle>
-                      <CardDescription>{item.description}</CardDescription>
+                      <CardDescription className="min-h-[20px]">{item.description}</CardDescription>
                     </div>
                     <div className="flex items-center justify-center h-6 w-6 rounded-full bg-green-100 text-green-600 text-xs font-medium">
                       {item.quantity_available}
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-grow">
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm">Status</span>
@@ -186,11 +186,15 @@ export default function EquipmentPage() {
                 </CardContent>
                 <CardFooter className="flex gap-2">
                   <Button variant="outline" className="flex-1" asChild>
-                    <Link href={`/dashboard/equipment/${item.equipment_id}/edit`}>
+                    <Link href={`/dashboard/equipment/${item.equipment_id}`}>
                       Edit
                     </Link>
                   </Button>
-                  <Button variant="outline" className="flex-1">View History</Button>
+                  <Button variant="outline" className="flex-1" asChild>
+                    <Link href={`/dashboard/equipment/${item.equipment_id}/history`}>
+                      View History
+                    </Link>
+                  </Button>
                 </CardFooter>
               </Card>
             ))}

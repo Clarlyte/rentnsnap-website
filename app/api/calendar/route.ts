@@ -6,6 +6,16 @@ export async function GET() {
   try {
     const supabase = createRouteHandlerClient({ cookies })
 
+    // First, get all equipment
+    const { data: equipment, error: equipmentError } = await supabase
+      .from('equipment')
+      .select('equipment_id, name')
+      .eq('is_active', true)
+
+    if (equipmentError) {
+      throw equipmentError
+    }
+
     // Fetch rentals with customer and equipment details
     const { data: rentals, error } = await supabase
       .from('rentals')
@@ -16,6 +26,7 @@ export async function GET() {
           last_name
         ),
         rental_equipment (
+          equipment_id,
           equipment (
             name,
             type
@@ -29,7 +40,7 @@ export async function GET() {
       throw error
     }
 
-    // Format rentals into calendar events and upcoming returns
+    // Format rentals into calendar events and group by equipment
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
@@ -39,13 +50,25 @@ export async function GET() {
         `${rental.customers.first_name} ${rental.customers.last_name}` : 
         'Unknown Customer',
       equipment: rental.rental_equipment
-        ?.map((re: any) => re.equipment?.name)
-        .filter(Boolean)
-        .join(', ') || 'No equipment',
+        ?.map((re: any) => ({
+          id: re.equipment_id,
+          name: re.equipment?.name
+        })) || [],
       startDate: new Date(rental.start_date),
       endDate: new Date(rental.end_date),
       status: rental.status
     }))
+
+    // Group rentals by equipment
+    const rentalsByEquipment = equipment.reduce((acc: any, eq) => {
+      acc[eq.equipment_id] = {
+        name: eq.name,
+        rentals: formattedRentals.filter(rental => 
+          rental.equipment.some(e => e.id === eq.equipment_id)
+        )
+      }
+      return acc
+    }, {})
 
     // Split rentals into today's schedule and upcoming returns
     const todaySchedule = formattedRentals.filter(rental => {
@@ -62,7 +85,7 @@ export async function GET() {
     return NextResponse.json({
       todaySchedule,
       upcomingReturns,
-      allRentals: formattedRentals
+      rentalsByEquipment
     })
 
   } catch (error) {

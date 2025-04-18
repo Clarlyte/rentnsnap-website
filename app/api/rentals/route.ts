@@ -25,6 +25,9 @@ export async function GET() {
               daily_rate
             )
           )
+        ),
+        rental_verifications!rental_verifications_rental_id_fkey (
+          selfie_image_url
         )
       `)
       .order('created_at', { ascending: false })
@@ -51,8 +54,34 @@ export async function GET() {
         }
       }) || []
 
-      return {
+      // Get the public URL for the selfie image
+      const selfieImagePath = rental.rental_verifications?.[0]?.selfie_image_url
+      let selfieUrl = null
+      
+      if (selfieImagePath) {
+        console.log('Found selfie image path:', selfieImagePath)
+        
+        // If it's already a full URL, use it directly
+        if (selfieImagePath.startsWith('http')) {
+          selfieUrl = selfieImagePath
+        } else {
+          // If it's just a filename, get the public URL
+          const { data: publicUrl } = supabase
+            .storage
+            .from('rental-documents')
+            .getPublicUrl(selfieImagePath)
+          
+          selfieUrl = publicUrl.publicUrl
+        }
+        
+        console.log('Generated public URL:', selfieUrl)
+      } else {
+        console.log('No selfie image path found for rental:', rental.rental_id)
+      }
+
+      const formattedRental = {
         id: rental.rental_id,
+        selfieUrl,
         customerName: rental.customers ? 
           `${rental.customers.first_name} ${rental.customers.last_name}` : 
           'Unknown Customer',
@@ -67,6 +96,9 @@ export async function GET() {
         status: rental.status,
         amount: rental.total_price
       }
+
+      console.log('Formatted rental data:', formattedRental)
+      return formattedRental
     })
 
     console.log('Fetched rentals:', formattedRentals)

@@ -14,10 +14,22 @@ import { toast } from "sonner"
 interface RentalEvent {
   id: string
   customerName: string
-  equipment: string
+  equipment: Array<{
+    id: string
+    name: string
+  }>
   startDate: Date
   endDate: Date
   status: string
+}
+
+interface EquipmentRentals {
+  name: string
+  rentals: RentalEvent[]
+}
+
+interface RentalsByEquipment {
+  [key: string]: EquipmentRentals
 }
 
 export default function CalendarPage() {
@@ -26,7 +38,7 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true)
   const [todaySchedule, setTodaySchedule] = useState<RentalEvent[]>([])
   const [upcomingReturns, setUpcomingReturns] = useState<RentalEvent[]>([])
-  const [allRentals, setAllRentals] = useState<RentalEvent[]>([])
+  const [rentalsByEquipment, setRentalsByEquipment] = useState<RentalsByEquipment>({})
 
   useEffect(() => {
     const fetchCalendarData = async () => {
@@ -38,7 +50,7 @@ export default function CalendarPage() {
         
         setTodaySchedule(data.todaySchedule)
         setUpcomingReturns(data.upcomingReturns)
-        setAllRentals(data.allRentals)
+        setRentalsByEquipment(data.rentalsByEquipment)
       } catch (error) {
         console.error('Error fetching calendar data:', error)
         toast.error('Failed to load calendar data')
@@ -96,26 +108,43 @@ export default function CalendarPage() {
       </DashboardHeader>
 
       <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Rental Calendar</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Calendar 
-              mode="single" 
-              selected={date} 
-              onSelect={setDate} 
-              className="rounded-md border"
-              // Add selected date styling for dates with rentals
-              modifiers={{
-                booked: allRentals.map(rental => new Date(rental.startDate))
-              }}
-              modifiersStyles={{
-                booked: { backgroundColor: 'var(--primary)', color: 'white' }
-              }}
-            />
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          {loading ? (
+            <Card>
+              <CardContent className="py-8">
+                <div className="text-center text-muted-foreground">Loading calendars...</div>
+              </CardContent>
+            </Card>
+          ) : Object.entries(rentalsByEquipment).length === 0 ? (
+            <Card>
+              <CardContent className="py-8">
+                <div className="text-center text-muted-foreground">No equipment found. Add some equipment to view calendars.</div>
+              </CardContent>
+            </Card>
+          ) : (
+            Object.entries(rentalsByEquipment).map(([equipmentId, { name, rentals }]) => (
+              <Card key={equipmentId}>
+                <CardHeader>
+                  <CardTitle>{name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Calendar 
+                    mode="single" 
+                    selected={date} 
+                    onSelect={setDate} 
+                    className="rounded-md border"
+                    modifiers={{
+                      booked: rentals.map(rental => new Date(rental.startDate))
+                    }}
+                    modifiersStyles={{
+                      booked: { backgroundColor: 'var(--primary)', color: 'white' }
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
 
         <div className="space-y-4">
           <Card>
@@ -131,7 +160,9 @@ export default function CalendarPage() {
                     <div key={rental.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
                       <div>
                         <p className="font-medium">{rental.customerName}</p>
-                        <p className="text-sm text-muted-foreground">{rental.equipment}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {rental.equipment.map(e => e.name).join(', ')}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                           {new Date(rental.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
@@ -161,7 +192,9 @@ export default function CalendarPage() {
                     <div key={rental.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
                       <div>
                         <p className="font-medium">{rental.customerName}</p>
-                        <p className="text-sm text-muted-foreground">{rental.equipment}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {rental.equipment.map(e => e.name).join(', ')}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                           Due in {getDaysUntil(rental.endDate)} day{getDaysUntil(rental.endDate) !== 1 ? 's' : ''}
                         </p>
