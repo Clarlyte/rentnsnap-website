@@ -36,6 +36,8 @@ const SignaturePadWrapper = forwardRef<SignatureCanvas, SignaturePadProps>((prop
         penColor="black"
         canvasProps={{
           className: "signature-canvas",
+          width: 500,
+          height: 200,
           style: {
             width: '100%',
             height: '100%',
@@ -249,13 +251,13 @@ export default function CreateRentalPage() {
         return;
       }
 
-      // Get the signature data as PNG with transparent background
-      const trimmedDataURL = signaturePad.getTrimmedCanvas().toDataURL('image/png');
+      // Get the signature data directly as a data URL
+      const dataURL = signaturePad.toDataURL('image/png');
       
       // Save the signature data
       setVerificationData(prev => ({
         ...prev,
-        signature: trimmedDataURL
+        signature: dataURL
       }));
       
       // Mark signature as saved
@@ -297,11 +299,33 @@ export default function CreateRentalPage() {
 
   const handleSubmit = async () => {
     try {
-      setIsSubmitting(true)
+      setIsSubmitting(true);
 
-      // Validate verification data
-      if (!verificationData.idType || !verificationData.idNumber || !verificationData.idImage || !verificationData.selfieWithId || !verificationData.signature) {
-        throw new Error('Please complete all verification requirements')
+      // Validate verification data with more specific messages
+      if (!verificationData.idType) {
+        toast.error('Please select an ID type from the dropdown');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!verificationData.idNumber) {
+        toast.error('Please enter the ID number');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!verificationData.idImage) {
+        toast.error('Please upload an ID document image');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!verificationData.selfieWithId) {
+        toast.error('Please upload a selfie with ID image');
+        setIsSubmitting(false);
+        return;
+      }
+      if (!verificationData.signature) {
+        toast.error('Please draw and save your signature');
+        setIsSubmitting(false);
+        return;
       }
 
       // 1. Create or get customer
@@ -309,51 +333,37 @@ export default function CreateRentalPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(customerData)
-      })
+      });
 
       if (!customerResponse.ok) {
-        const error = await customerResponse.json()
-        throw new Error(error.error || 'Failed to create customer')
+        const error = await customerResponse.json();
+        throw new Error(error.message || 'Failed to create customer');
       }
 
-      const { customer_id } = await customerResponse.json()
+      const { customer_id } = await customerResponse.json();
 
       // 2. Create rental record
-      const startDateTime = startDate ? new Date(startDate) : null
-      const endDateTime = endDate ? new Date(endDate) : null
-
-      if (!startDateTime || !endDateTime) {
-        throw new Error('Invalid dates')
-      }
-
-      // Set the time components using 24-hour format
-      const [startHours, startMinutes] = startTime.split(':')
-      startDateTime.setHours(parseInt(startHours), parseInt(startMinutes), 0)
-      
-      const [endHours, endMinutes] = endTime.split(':')
-      endDateTime.setHours(parseInt(endHours), parseInt(endMinutes), 0)
-
       const rentalData = {
         customer_id,
-        start_date: startDateTime.toISOString(),
-        end_date: endDateTime.toISOString(),
+        start_date: new Date(startDate!).toISOString(),
+        end_date: new Date(endDate!).toISOString(),
         status: "Reserved",
         total_price: calculateTotalPrice(),
         notes
-      }
+      };
 
       const rentalResponse = await fetch("/api/rentals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(rentalData)
-      })
+      });
 
       if (!rentalResponse.ok) {
-        const error = await rentalResponse.json()
-        throw new Error(error.error || 'Failed to create rental')
+        const error = await rentalResponse.json();
+        throw new Error(error.message || 'Failed to create rental');
       }
 
-      const { rental_id } = await rentalResponse.json()
+      const { rental_id } = await rentalResponse.json();
 
       // 3. Create rental equipment records
       const equipmentPromises = selectedEquipment.map(equipment => 
@@ -365,34 +375,78 @@ export default function CreateRentalPage() {
             equipment_id: equipment.equipment_id
           })
         })
-      )
+      );
 
-      await Promise.all(equipmentPromises)
+      const equipmentResults = await Promise.all(equipmentPromises);
+      const failedEquipment = equipmentResults.filter(res => !res.ok);
+      if (failedEquipment.length > 0) {
+        throw new Error('Failed to add some equipment to the rental');
+      }
 
-      // Upload verification data
+      // 4. Upload ID document
+      const idFormData = new FormData();
+      idFormData.append('file', verificationData.idImage);
+      
+      const idUploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: idFormData
+      });
+
+      if (!idUploadResponse.ok) {
+        const error = await idUploadResponse.json();
+        throw new Error(error.message || 'Failed to upload ID document');
+      }
+
+      const idUploadData = await idUploadResponse.json();
+
+      // 5. Upload selfie
+      const selfieFormData = new FormData();
+      selfieFormData.append('file', verificationData.selfieWithId);
+      
+      const selfieUploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: selfieFormData
+      });
+
+      if (!selfieUploadResponse.ok) {
+        const error = await selfieUploadResponse.json();
+        throw new Error(error.message || 'Failed to upload selfie');
+      }
+
+      const selfieUploadData = await selfieUploadResponse.json();
+
+      // 6. Save verification data
       const verificationResponse = await fetch("/api/verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           rental_id,
-          ...verificationData
+          id_type: verificationData.idType,
+          id_number: verificationData.idNumber,
+          signature_data: verificationData.signature,
+          id_image_url: idUploadData.url,
+          selfie_image_url: selfieUploadData.url
         })
-      })
+      });
 
       if (!verificationResponse.ok) {
-        throw new Error('Failed to save verification data')
+        const error = await verificationResponse.json();
+        throw new Error(error.message || 'Failed to save verification data');
       }
 
-      toast.success("Rental created successfully!")
-      router.push("/dashboard/rentals")
+      toast.success("Rental created successfully!");
+      
+      // Add a small delay before redirecting to ensure the toast is seen
+      setTimeout(() => {
+        router.push("/dashboard/rentals");
+      }, 1000);
       
     } catch (error) {
-      console.error("Error creating rental:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to create rental. Please try again.")
-    } finally {
-      setIsSubmitting(false)
+      console.error("Error creating rental:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to create rental. Please try again.");
+      setIsSubmitting(false);
     }
-  }
+  };
 
   // Fetch equipment on component mount
   useEffect(() => {
