@@ -94,7 +94,7 @@ export default function CalendarPage() {
 
     if (!rental) {
       return (
-        <div className="h-full w-full flex items-center justify-center text-foreground hover:bg-muted">
+        <div className="h-8 w-8 flex items-center justify-center text-foreground hover:bg-muted rounded-sm mx-auto">
           {day.getDate()}
         </div>
       )
@@ -102,7 +102,7 @@ export default function CalendarPage() {
 
     return (
       <div
-        className="h-full w-full flex items-center justify-center text-white rounded-sm"
+        className="h-8 w-8 flex items-center justify-center text-white rounded-sm mx-auto"
         style={{ 
           backgroundColor: rental.status === 'Reserved' ? '#FF9800' : '#2196F3',
           opacity: rental.status === 'Reserved' ? '0.8' : '1'
@@ -245,29 +245,29 @@ export default function CalendarPage() {
   return (
     <DashboardShell>
       <DashboardHeader heading="Calendar" text="View and manage rental schedules">
-        <div className="flex gap-4">
-          <Button asChild>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/dashboard/rentals/create-rental">
               <Plus className="mr-2 h-4 w-4" /> New Rental
             </Link>
           </Button>
-          <Button variant="outline" onClick={copyFormLink} title="Copy rental form link">
+          <Button variant="outline" onClick={copyFormLink} title="Copy rental form link" className="w-full sm:w-auto">
             <Copy className="h-4 w-4" />
           </Button>
         </div>
       </DashboardHeader>
 
-      <div className="grid gap-8 md:grid-cols-[2fr_1fr]">
-        <div className="grid gap-6 auto-rows-min grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-4 md:gap-6 md:grid-cols-[1fr] lg:grid-cols-[2fr_1fr]">
+        <div className="grid gap-3 sm:gap-4 auto-rows-min grid-cols-1">
           {loading ? (
-            <Card className="lg:col-span-2">
-              <CardContent className="p-8">
+            <Card className="w-full">
+              <CardContent className="p-4">
                 <div className="text-center text-muted-foreground">Loading calendars...</div>
               </CardContent>
             </Card>
           ) : Object.entries(rentalsByEquipment).length === 0 ? (
-            <Card className="lg:col-span-2">
-              <CardContent className="p-8">
+            <Card className="w-full">
+              <CardContent className="p-4">
                 <div className="text-center text-muted-foreground">No equipment found. Add some equipment to view calendars.</div>
               </CardContent>
             </Card>
@@ -277,58 +277,70 @@ export default function CalendarPage() {
               .sort(([nameA], [nameB]) => nameA.localeCompare(nameB))
               .map(([equipmentId, { name, rentals }]) => (
                 <Card key={equipmentId} className="w-full">
-                  <CardHeader className="pb-4">
-                    <CardTitle>{name}</CardTitle>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base text-center">{name}</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <Calendar 
-                      mode="single" 
-                      selected={undefined}
-                      onSelect={setDate} 
-                      className="rounded-md border w-full"
-                      classNames={{
-                        day: "h-9 w-9 p-0 font-normal",
-                        day_today: "",
-                        day_selected: "",
-                        day_range_middle: "rounded-none",
-                        day_hidden: "invisible",
-                        nav_button_previous: "absolute left-1",
-                        nav_button_next: "absolute right-1",
-                        head_cell: "text-muted-foreground font-medium",
-                        cell: "h-9 w-9 text-center text-sm relative p-0 focus-within:relative focus-within:z-20",
-                      }}
-                      components={{
-                        DayContent: ({ date: day }) => getDayContent(day, rentals)
-                      }}
-                    />
+                  <CardContent className="px-0 pb-0 pt-0">
+                    <div className="w-full flex justify-center">
+                      <Calendar 
+                        mode="single" 
+                        selected={undefined}
+                        onSelect={setDate} 
+                        className="w-full"
+                        classNames={{
+                          root: "w-full",
+                          months: "w-full",
+                          month: "w-full space-y-4",
+                          caption: "relative flex items-center justify-center pt-1 pb-2",
+                          caption_label: "text-sm font-medium mx-auto",
+                          nav: "space-x-1 flex items-center bg-transparent",
+                          nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute top-1",
+                          nav_button_previous: "left-1",
+                          nav_button_next: "right-1",
+                          table: "w-full border-collapse space-y-1",
+                          head_row: "grid grid-cols-7 gap-1",
+                          head_cell: "text-muted-foreground font-medium text-[0.8rem] flex items-center justify-center h-9",
+                          row: "grid grid-cols-7 gap-1",
+                          cell: "h-9 relative p-0 focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent flex items-center justify-center",
+                          day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:rounded-sm",
+                          day_today: "bg-accent/50 rounded-sm",
+                          day_selected: "rounded-sm",
+                          day_range_middle: "rounded-none",
+                          day_hidden: "invisible",
+                        }}
+                        components={{
+                          DayContent: ({ date: day }) => getDayContent(day, rentals)
+                        }}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
               ))
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-4">
           <Card>
-            <CardHeader className="pb-4">
-              <CardTitle>Today&apos;s Schedule</CardTitle>
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg">Today&apos;s Schedule</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4">
               {loading ? (
                 <div className="text-center text-muted-foreground">Loading schedule...</div>
               ) : todaySchedule.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {todaySchedule.map((rental) => (
-                    <div key={rental.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                    <div key={rental.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 sm:pb-4 last:border-0 last:pb-0">
                       <div className="space-y-1">
-                        <p className="font-medium">{rental.customerName}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-medium text-sm sm:text-base">{rental.customerName}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {rental.equipment.map(e => e.name).join(', ')}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {new Date(rental.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
-                      <Badge variant={rental.status === 'Reserved' ? 'default' : 'secondary'}>
+                      <Badge variant={rental.status === 'Reserved' ? 'default' : 'secondary'} className="w-fit">
                         {rental.status}
                       </Badge>
                     </div>
@@ -341,23 +353,23 @@ export default function CalendarPage() {
           </Card>
 
           <Card>
-            <CardHeader className="pb-4">
-              <CardTitle>Upcoming Rentals</CardTitle>
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg">Upcoming Rentals</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4">
               {loading ? (
                 <div className="text-center text-muted-foreground">Loading upcoming rentals...</div>
               ) : getUpcomingRentals().length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {getUpcomingRentals().map((rental) => (
-                    <div key={rental.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                    <div key={rental.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 sm:pb-4 last:border-0 last:pb-0">
                       <div className="space-y-1">
-                        <p className="font-medium">{rental.customerName}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-medium text-sm sm:text-base">{rental.customerName}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {rental.equipment.map(e => e.name).join(', ')}
                         </p>
                         <div className="flex flex-col gap-0.5">
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             Start: {new Date(rental.startDate).toLocaleString('en-US', { 
                               month: 'short', 
                               day: 'numeric', 
@@ -366,12 +378,12 @@ export default function CalendarPage() {
                               minute: '2-digit'
                             })}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             (Starts in {getDaysUntilStart(rental.startDate)} day{getDaysUntilStart(rental.startDate) !== 1 ? 's' : ''})
                           </p>
                         </div>
                       </div>
-                      <Badge>Reserved</Badge>
+                      <Badge className="w-fit">Reserved</Badge>
                     </div>
                   ))}
                 </div>
@@ -382,23 +394,23 @@ export default function CalendarPage() {
           </Card>
 
           <Card>
-            <CardHeader className="pb-4">
-              <CardTitle>Incoming Returns</CardTitle>
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg">Incoming Returns</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4">
               {loading ? (
                 <div className="text-center text-muted-foreground">Loading returns...</div>
               ) : getIncomingReturns().length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {getIncomingReturns().map((rental) => (
-                    <div key={rental.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
+                    <div key={rental.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 sm:pb-4 last:border-0 last:pb-0">
                       <div className="space-y-1">
-                        <p className="font-medium">{rental.customerName}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="font-medium text-sm sm:text-base">{rental.customerName}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {rental.equipment.map(e => e.name).join(', ')}
                         </p>
                         <div className="flex flex-col gap-0.5">
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             Return: {new Date(rental.endDate).toLocaleString('en-US', { 
                               month: 'short', 
                               day: 'numeric', 
@@ -407,12 +419,12 @@ export default function CalendarPage() {
                               minute: '2-digit'
                             })}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             (Due in {getDaysUntil(rental.endDate)} day{getDaysUntil(rental.endDate) !== 1 ? 's' : ''})
                           </p>
                         </div>
                       </div>
-                      <Badge variant={rental.status === 'Active' ? 'secondary' : 'default'}>
+                      <Badge variant={rental.status === 'Active' ? 'secondary' : 'default'} className="w-fit">
                         {rental.status}
                       </Badge>
                     </div>

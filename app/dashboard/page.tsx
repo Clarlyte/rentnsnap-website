@@ -119,7 +119,7 @@ export default function DashboardPage() {
   return (
     <DashboardShell>
       <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">Dashboard Overview</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold">Dashboard Overview</h1>
         <div className="w-full sm:w-auto">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="w-full sm:w-[180px]">
@@ -173,15 +173,15 @@ export default function DashboardPage() {
         <div className="grid gap-6 lg:grid-cols-[1fr_300px] xl:grid-cols-[2fr_1fr]">
           {/* Recent Activity */}
           <div className="rounded-lg border bg-card p-4 sm:p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <h3 className="font-semibold">Recent Activity</h3>
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h3 className="font-semibold text-lg">Recent Activity</h3>
               <Button variant="link" asChild className="h-auto p-0">
                 <Link href="/dashboard/rentals">View all rentals</Link>
               </Button>
             </div>
             <div className="space-y-4">
               {rentals.slice(0, 5).map(rental => (
-                <div key={rental.rental_id} className="flex items-center justify-between border-b pb-4 last:border-0">
+                <div key={rental.rental_id} className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 last:border-0 gap-2">
                   <div className="min-w-0 flex-1 pr-4">
                     <p className="font-medium line-clamp-1">{rental.customerName}</p>
                     <p className="text-sm text-muted-foreground line-clamp-1">{rental.equipment}</p>
@@ -202,8 +202,8 @@ export default function DashboardPage() {
           <div className="space-y-6">
             {/* Equipment Status */}
             <div className="rounded-lg border bg-card p-4 sm:p-6 hover:shadow-md transition-shadow">
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="font-semibold">Equipment Status</h3>
+              <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h3 className="font-semibold text-lg">Equipment Status</h3>
                 <Button variant="link" asChild className="h-auto p-0">
                   <Link href="/dashboard/equipment">View all</Link>
                 </Button>
@@ -232,15 +232,15 @@ export default function DashboardPage() {
 
             {/* Upcoming Returns */}
             <div className="rounded-lg border bg-card p-4 sm:p-6 hover:shadow-md transition-shadow">
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="font-semibold">Upcoming Returns</h3>
+              <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h3 className="font-semibold text-lg">Upcoming Returns</h3>
                 <Button variant="link" asChild className="h-auto p-0">
                   <Link href="/dashboard/calendar">View calendar</Link>
                 </Button>
               </div>
               <div className="space-y-4">
                 {getUpcomingReturns().map(rental => (
-                  <div key={rental.rental_id} className="flex items-center justify-between">
+                  <div key={rental.rental_id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="min-w-0 flex-1 pr-4">
                       <p className="text-sm font-medium line-clamp-1">{rental.customerName}</p>
                       <p className="text-xs text-muted-foreground line-clamp-1">
@@ -252,11 +252,11 @@ export default function DashboardPage() {
                         })}
                       </p>
                     </div>
+                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                      Due soon
+                    </Badge>
                   </div>
                 ))}
-                {getUpcomingReturns().length === 0 && (
-                  <p className="text-center text-sm text-muted-foreground">No upcoming returns</p>
-                )}
               </div>
             </div>
           </div>
