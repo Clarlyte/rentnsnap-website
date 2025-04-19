@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Button } from "@/components/ui/button"
@@ -42,9 +42,9 @@ export default function CalendarPage() {
   const [upcomingReturns, setUpcomingReturns] = useState<RentalEvent[]>([])
   const [rentalsByEquipment, setRentalsByEquipment] = useState<RentalsByEquipment>({})
   const [colorMap, setColorMap] = useState<{ [key: string]: string }>({})
-  const [events, setEvents] = useState<any[]>([])
+  const [events, setEvents] = useState<RentalEvent[]>([])
 
-  const getCustomerColor = (customerName: string) => {
+  const getCustomerColor = useCallback((customerName: string) => {
     if (colorMap[customerName]) return colorMap[customerName]
     
     const colors = [
@@ -67,7 +67,7 @@ export default function CalendarPage() {
     
     setColorMap(prev => ({ ...prev, [customerName]: newColor }))
     return newColor
-  }
+  }, [colorMap])
 
   const getRentalForDate = (date: Date, rentals: RentalEvent[]) => {
     return rentals.find(rental => 
@@ -310,7 +310,7 @@ export default function CalendarPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader className="pb-4">
-              <CardTitle>Today's Schedule</CardTitle>
+              <CardTitle>Today&apos;s Schedule</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {loading ? (

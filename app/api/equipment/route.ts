@@ -2,6 +2,12 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
+interface RentalRate {
+  daily_rate: number
+  min_days: number
+  max_days: number
+}
+
 export async function GET(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -123,7 +129,7 @@ export async function POST(request: Request) {
 
     // Get the default rental price from rental rates if provided
     const rental_price_day = rental_rates && rental_rates.length > 0
-      ? Math.min(...rental_rates.map((rate: any) => rate.daily_rate))
+      ? Math.min(...rental_rates.map((rate: RentalRate) => rate.daily_rate))
       : 0
 
     // Start a transaction
@@ -158,7 +164,7 @@ export async function POST(request: Request) {
       const { error: ratesError } = await supabase
         .from('rental_rates')
         .insert(
-          rental_rates.map((rate: any) => ({
+          rental_rates.map((rate: RentalRate) => ({
             equipment_id: equipment.equipment_id,
             min_days: rate.min_days,
             max_days: rate.max_days,

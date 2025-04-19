@@ -2,6 +2,18 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
+interface EquipmentRentals {
+  name: string
+  rentals: Array<{
+    id: string
+    customerName: string
+    equipment: Array<{ id: string }>
+    startDate: Date
+    endDate: Date
+    status: string
+  }>
+}
+
 export async function GET() {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -96,7 +108,7 @@ export async function GET() {
     }))
 
     // Group rentals by equipment
-    const rentalsByEquipment = equipment.reduce((acc: any, eq) => {
+    const rentalsByEquipment = equipment.reduce((acc: Record<string, EquipmentRentals>, eq) => {
       acc[eq.equipment_id] = {
         name: eq.name,
         rentals: formattedRentals.filter(rental => 

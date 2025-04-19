@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, Camera } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
+import Image from 'next/image'
 
 interface Equipment {
   equipment_id: string
@@ -151,10 +152,12 @@ export default function EquipmentPage() {
               <Card key={item.equipment_id} className="overflow-hidden flex flex-col">
                 <div className="aspect-video bg-muted relative">
                   {item.image_url ? (
-                    <img
+                    <Image
                       src={item.image_url}
                       alt={item.name}
                       className="object-cover w-full h-full"
+                      width={500}
+                      height={300}
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full">

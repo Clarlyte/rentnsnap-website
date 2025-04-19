@@ -2,6 +2,15 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
+interface RentalEquipment {
+  equipment: {
+    name: string
+    rental_rates: Array<{
+      daily_rate: number
+    }>
+  }
+}
+
 export async function GET() {
   try {
     const supabase = createRouteHandlerClient({ cookies })
@@ -40,10 +49,10 @@ export async function GET() {
     // Format the data for the frontend
     const formattedRentals = rentals.map(rental => {
       // Get equipment names and their lowest daily rates
-      const equipmentList = rental.rental_equipment?.map((re: any) => {
+      const equipmentList = rental.rental_equipment?.map((re: RentalEquipment) => {
         const equipment = re.equipment
         // Get the lowest daily rate from rental_rates
-        const lowestRate = equipment?.rental_rates?.reduce((min: number, rate: any) => 
+        const lowestRate = equipment?.rental_rates?.reduce((min: number, rate: { daily_rate: number }) => 
           rate.daily_rate < min ? rate.daily_rate : min,
           equipment.rental_rates[0]?.daily_rate || 0
         ) || 0
