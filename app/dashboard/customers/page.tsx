@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Plus, Search, User } from "lucide-react"
+import { Plus, Search, User, MoreVertical, FileText } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import {
@@ -17,6 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface Customer {
   customer_id: string
@@ -88,21 +94,21 @@ export default function CustomersPage() {
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <div className="flex-1 w-full">
             <div className="relative w-full">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Search customers..."
-                className="pl-8"
+                className="pl-10 w-full"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
             <Select
               value={selectedMonth}
               onValueChange={setSelectedMonth}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select month" />
               </SelectTrigger>
               <SelectContent>
@@ -120,7 +126,7 @@ export default function CustomersPage() {
               value={selectedStatus}
               onValueChange={setSelectedStatus}
             >
-              <SelectTrigger className="w-[130px]">
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -136,19 +142,28 @@ export default function CustomersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Customer</TableHead>
-                <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead className="hidden lg:table-cell">Phone</TableHead>
-                <TableHead className="hidden xl:table-cell">Address</TableHead>
-                <TableHead className="hidden md:table-cell">Member Since</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="min-w-[150px]">
+                  <div className="flex items-center">Customer</div>
+                </TableHead>
+                <TableHead className="min-w-[120px]">
+                  <div className="flex items-center">Email</div>
+                </TableHead>
+                <TableHead className="min-w-[120px]">
+                  <div className="flex items-center">Phone</div>
+                </TableHead>
+                <TableHead className="min-w-[120px]">
+                  <div className="flex items-center">Address</div>
+                </TableHead>
+                <TableHead className="min-w-[100px]">
+                  <div className="flex items-center">Member Since</div>
+                </TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center">
+                  <TableCell colSpan={6} className="text-center">
                     <div className="flex flex-col items-center justify-center py-12">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
                       <p className="text-muted-foreground">Loading customers...</p>
@@ -157,7 +172,7 @@ export default function CustomersPage() {
                 </TableRow>
               ) : filteredCustomers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center">
+                  <TableCell colSpan={6} className="text-center">
                     <div className="flex flex-col items-center justify-center py-16">
                       <div className="bg-muted rounded-full p-6 mb-6">
                         <User className="h-8 w-8 text-muted-foreground" />
@@ -186,39 +201,53 @@ export default function CustomersPage() {
                 filteredCustomers.map((customer) => (
                   <TableRow key={customer.customer_id}>
                     <TableCell>
-                      <div className="flex items-center gap-4">
-                        <Avatar>
-                          <AvatarFallback>
-                            {customer.first_name[0]}{customer.last_name[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{customer.first_name} {customer.last_name}</p>
-                          <p className="text-sm text-muted-foreground md:hidden">
+                      <div className="flex items-center gap-2">
+                        <div className="relative h-8 w-8 rounded-full overflow-hidden">
+                          <Avatar>
+                            <AvatarFallback className="text-xs">
+                              {customer.first_name[0]}{customer.last_name[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{customer.first_name} {customer.last_name}</p>
+                          <p className="text-xs text-muted-foreground truncate sm:hidden">
                             {customer.email}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate sm:hidden">
+                            {customer.phone || '-'}
                           </p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">{customer.email}</TableCell>
-                    <TableCell className="hidden lg:table-cell">{customer.phone || '-'}</TableCell>
-                    <TableCell className="hidden xl:table-cell">{customer.address || '-'}</TableCell>
-                    <TableCell className="hidden md:table-cell">{new Date(customer.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        customer.status === 'Active' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                      }`}>
-                        {customer.status}
-                      </div>
+                      <div className="truncate max-w-[120px]">{customer.email}</div>
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" asChild className="w-full sm:w-auto">
-                        <Link href={`/dashboard/customers/customer-data/${customer.customer_id}`}>
-                          View Details
-                        </Link>
-                      </Button>
+                      <div className="truncate max-w-[120px]">{customer.phone || '-'}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="truncate max-w-[120px]">{customer.address || '-'}</div>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(customer.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/dashboard/customers/customer-data/${customer.customer_id}`}>
+                              <FileText className="mr-2 h-4 w-4" />
+                              View Details
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))

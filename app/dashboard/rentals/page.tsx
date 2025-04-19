@@ -223,25 +223,25 @@ export default function RentalsPage() {
 
       <div className="space-y-6">
         {/* Form Link Section */}
-        <div className="bg-muted p-8 rounded-lg">
-          <div className="flex flex-col sm:flex-row items-center gap-6">
+        <div className="bg-muted p-4 sm:p-6 md:p-8 rounded-lg">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <div className="flex-1 w-full">
               <Input
                 value={formLink || "Click the copy icon to generate a rental form link"}
                 readOnly
-                className="w-full bg-background"
+                className="w-full bg-background text-sm sm:text-base"
               />
             </div>
             <Button 
               variant="outline" 
               onClick={copyFormLink} 
-              className="min-w-[120px] h-10"
+              className="w-full sm:w-auto min-w-[120px] h-10"
             >
               <Copy className="mr-2 h-4 w-4" />
               Copy Link
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground mt-4">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-2 sm:mt-4">
             Share this link with customers to let them fill in their rental information
           </p>
         </div>
@@ -251,25 +251,22 @@ export default function RentalsPage() {
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search rentals..."
-                  className="pl-9 h-12"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 w-full"
                 />
               </div>
             </div>
-            <div className="flex gap-4 flex-col sm:flex-row sm:w-auto w-full">
-              <Select
-                value={selectedMonth}
-                onValueChange={setSelectedMonth}
-              >
-                <SelectTrigger className="w-full sm:w-[180px] h-12">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select month" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="all">All Months</SelectItem>
                   {Array.from({ length: 12 }, (_, i) => {
                     const date = new Date()
                     date.setMonth(date.getMonth() - i)
@@ -279,29 +276,27 @@ export default function RentalsPage() {
                   })}
                 </SelectContent>
               </Select>
-              
               <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-full sm:w-[180px] h-12">
-                  <SelectValue placeholder="Status" />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="Reserved">Reserved</SelectItem>
                   <SelectItem value="Active">Active</SelectItem>
                   <SelectItem value="Completed">Completed</SelectItem>
                   <SelectItem value="Cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
-
               <Select value={selectedEquipmentType} onValueChange={setSelectedEquipmentType}>
-                <SelectTrigger className="w-full sm:w-[180px] h-12">
-                  <SelectValue placeholder="Equipment Type" />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Equipment type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  {equipmentTypes.map(type => (
+                  {equipmentTypes.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                      {type}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -310,159 +305,131 @@ export default function RentalsPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="hidden sm:table-cell">ID Verification</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Equipment</TableHead>
-                <TableHead className="hidden md:table-cell">Start Date</TableHead>
-                <TableHead className="hidden md:table-cell">End Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden lg:table-cell">Amount</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
+        {/* Table Section */}
+        <div className="rounded-md border">
+          <div className="relative w-full overflow-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center">
-                    <div className="flex flex-col items-center justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
-                      <p className="text-muted-foreground">Loading rentals...</p>
-                    </div>
-                  </TableCell>
+                  <TableHead className="min-w-[150px]">
+                    <div className="flex items-center">Customer</div>
+                  </TableHead>
+                  <TableHead className="min-w-[120px]">
+                    <div className="flex items-center">Equipment</div>
+                  </TableHead>
+                  <TableHead className="min-w-[120px]">
+                    <div className="flex items-center">Start Date</div>
+                  </TableHead>
+                  <TableHead className="min-w-[120px]">
+                    <div className="flex items-center">End Date</div>
+                  </TableHead>
+                  <TableHead className="min-w-[100px]">
+                    <div className="flex items-center">Status</div>
+                  </TableHead>
+                  <TableHead className="min-w-[100px] text-right">
+                    <div className="flex items-center justify-end">Amount</div>
+                  </TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
-              ) : filteredRentals.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center">
-                    <div className="flex flex-col items-center justify-center py-16">
-                      <div className="bg-muted rounded-full p-6 mb-6">
-                        <FileText className="h-8 w-8 text-muted-foreground" />
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center">
+                      <div className="flex flex-col items-center justify-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+                        <p className="text-muted-foreground">Loading rentals...</p>
                       </div>
-                      <h3 className="text-lg font-semibold mb-3">No rentals yet</h3>
-                      <p className="text-muted-foreground mb-6 max-w-md text-center">
-                        Start by creating your first rental or share the rental form link with customers.
-                      </p>
-                      <div className="flex flex-col sm:flex-row gap-4">
-                        <Button asChild>
-                          <Link href="/dashboard/rentals/create-rental">
-                            <Plus className="mr-2 h-4 w-4" /> Create Rental
-                          </Link>
-                        </Button>
-                        <Button variant="outline" onClick={copyFormLink}>
-                          <Copy className="mr-2 h-4 w-4" /> Copy Form Link
-                        </Button>
-                      </div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredRentals.map((rental) => (
-                  <TableRow key={rental.rental_id}>
-                    <TableCell className="hidden sm:table-cell">
-                      <div className="relative h-12 w-12 rounded-full overflow-hidden bg-muted">
-                        {rental.selfieUrl ? (
-                          <>
-                            <Image
-                              key={`${rental.rental_id}-image`}
-                              src={rental.selfieUrl}
-                              alt={`${rental.customerName}'s ID verification`}
-                              width={48}
-                              height={48}
-                              className="h-full w-full object-cover"
-                              onError={(e) => handleImageError(e, rental.customerName)}
-                              unoptimized
-                              priority
-                            />
-                            <div 
-                              key={`${rental.rental_id}-fallback`}
-                              className="fallback-icon absolute inset-0 bg-muted items-center justify-center" 
-                              style={{ display: 'none' }}
-                            >
-                              <User className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                          </>
-                        ) : (
-                          <div 
-                            key={`${rental.rental_id}-default`}
-                            className="absolute inset-0 bg-muted flex items-center justify-center"
-                          >
-                            <User className="h-6 w-6 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="sm:hidden">
-                          <div className="relative h-8 w-8 rounded-full overflow-hidden bg-muted">
-                            {rental.selfieUrl ? (
-                              <Image
-                                src={rental.selfieUrl}
-                                alt={`${rental.customerName}'s ID verification`}
-                                width={32}
-                                height={32}
-                                className="h-full w-full object-cover"
-                                onError={(e) => handleImageError(e, rental.customerName)}
-                                unoptimized
-                              />
-                            ) : (
-                              <div className="absolute inset-0 bg-muted flex items-center justify-center">
-                                <User className="h-4 w-4 text-muted-foreground" />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div>
-                          <p className="font-medium">{rental.customerName}</p>
-                          <p className="text-sm text-muted-foreground sm:hidden">
-                            {formatDateTime(rental.startDate)} - {formatDateTime(rental.endDate)}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{rental.equipment}</TableCell>
-                    <TableCell className="hidden md:table-cell">{formatDateTime(rental.startDate)}</TableCell>
-                    <TableCell className="hidden md:table-cell">{formatDateTime(rental.endDate)}</TableCell>
-                    <TableCell>
-                      <Badge variant={rental.status === 'Active' ? 'default' : rental.status === 'Completed' ? 'secondary' : 'outline'}>
-                        {rental.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">₱{rental.amount.toLocaleString()}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/dashboard/rentals/${rental.rental_id}`}>
-                              View Details
-                            </Link>
-                          </DropdownMenuItem>
-                          {rental.status === 'Active' && (
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedRental(rental)
-                                setCancelDialog(true)
-                              }}
-                            >
-                              Cancel Rental
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : filteredRentals.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center">
+                      <div className="flex flex-col items-center justify-center py-16">
+                        <div className="bg-muted rounded-full p-6 mb-6">
+                          <FileText className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-3">No rentals yet</h3>
+                        <p className="text-muted-foreground mb-6 max-w-md text-center">
+                          Start by creating your first rental or share the rental form link with customers.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                          <Button asChild>
+                            <Link href="/dashboard/rentals/create-rental">
+                              <Plus className="mr-2 h-4 w-4" /> Create Rental
+                            </Link>
+                          </Button>
+                          <Button variant="outline" onClick={copyFormLink}>
+                            <Copy className="mr-2 h-4 w-4" /> Copy Form Link
+                          </Button>
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredRentals.map((rental) => (
+                    <TableRow key={rental.rental_id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="relative h-8 w-8 rounded-full overflow-hidden">
+                            <Image
+                              src={`/api/customers/${rental.customer_id}/avatar`}
+                              alt={rental.customerName}
+                              fill
+                              className="object-cover"
+                              onError={(e) => handleImageError(e, rental.customerName)}
+                            />
+                            <div className="fallback-icon absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground">
+                              <User className="h-4 w-4" />
+                            </div>
+                          </div>
+                          <span className="font-medium">{rental.customerName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{rental.equipment}</TableCell>
+                      <TableCell>{formatDateTime(rental.startDate)}</TableCell>
+                      <TableCell>{formatDateTime(rental.endDate)}</TableCell>
+                      <TableCell>
+                        <Badge variant={
+                          rental.status === 'Active' ? 'default' :
+                          rental.status === 'Completed' ? 'secondary' :
+                          rental.status === 'Cancelled' ? 'destructive' :
+                          'outline'
+                        }>
+                          {rental.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">${rental.amount.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <FileText className="mr-2 h-4 w-4" />
+                              View Details
+                            </DropdownMenuItem>
+                            {rental.status === 'Active' && (
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedRental(rental)
+                                setCancelDialog(true)
+                              }}>
+                                <Ban className="mr-2 h-4 w-4" />
+                                Cancel Rental
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
 
