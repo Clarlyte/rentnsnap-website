@@ -985,7 +985,7 @@ export default function CreateRentalPage() {
                         <SelectValue placeholder="Select ID type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="drivers-license">Driver's License</SelectItem>
+                        <SelectItem value="drivers-license">Driver&apos;s License</SelectItem>
                         <SelectItem value="passport">Passport</SelectItem>
                         <SelectItem value="national-id">National ID</SelectItem>
                         <SelectItem value="company-id">Company ID</SelectItem>
@@ -1088,7 +1088,7 @@ export default function CreateRentalPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Digital Signature</CardTitle>
-                  <CardDescription>Collect customer's electronic signature</CardDescription>
+                  <CardDescription>Collect customer&apos;s electronic signature</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="border rounded-md p-4 h-40 bg-white relative">

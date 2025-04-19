@@ -4,7 +4,7 @@ import { Camera } from "lucide-react"
 import { UserRegisterForm } from "@/components/auth/user-register-form"
 
 export const metadata: Metadata = {
-  title: "Sign Up - Rent n' Snap",
+  title: "Sign Up - Rent n&apos; Snap",
   description: "Create your account",
 }
 
@@ -16,7 +16,7 @@ export default function SignUpPage() {
           <div className="flex items-center justify-center gap-2">
             <Camera className="h-6 w-6 text-gold-400" />
             <span className="text-2xl font-bold">
-              Rent n' <span className="text-gold-400">Snap</span>
+              Rent n&apos; <span className="text-gold-400">Snap</span>
             </span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>

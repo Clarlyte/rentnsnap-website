@@ -2,9 +2,10 @@ import { Metadata } from "next"
 import Link from "next/link"
 import { Camera } from "lucide-react"
 import { UserAuthForm } from "@/components/auth/user-auth-form"
+import { Suspense } from "react"
 
 export const metadata: Metadata = {
-  title: "Login - Rent n' Snap",
+  title: "Login - Rent n&apos; Snap",
   description: "Login to your account",
 }
 
@@ -16,7 +17,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-center gap-2">
             <Camera className="h-6 w-6 text-gold-400" />
             <span className="text-2xl font-bold">
-              Rent n' <span className="text-gold-400">Snap</span>
+              Rent n&apos; <span className="text-gold-400">Snap</span>
             </span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
@@ -24,13 +25,17 @@ export default function LoginPage() {
             Enter your email to sign in to your account
           </p>
         </div>
-        <UserAuthForm />
-        <div className="text-center text-sm">
-          Don't have an account?{' '}
-          <Link href="/signup" className="text-gold-400 hover:text-gold-500">
-            Sign up
+        <Suspense fallback={<div>Loading...</div>}>
+          <UserAuthForm />
+        </Suspense>
+        <p className="px-8 text-center text-sm text-muted-foreground">
+          <Link
+            href="/register"
+            className="hover:text-brand underline underline-offset-4"
+          >
+            Don&apos;t have an account? Sign Up
           </Link>
-        </div>
+        </p>
       </div>
     </div>
   )

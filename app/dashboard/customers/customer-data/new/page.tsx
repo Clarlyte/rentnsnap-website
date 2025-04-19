@@ -24,7 +24,7 @@ export default function NewCustomerPage() {
       <Card>
         <CardHeader>
           <CardTitle>Customer Information</CardTitle>
-          <CardDescription>Enter the customer's details below</CardDescription>
+          <CardDescription>Enter the customer&apos;s details below</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">

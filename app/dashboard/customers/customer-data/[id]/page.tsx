@@ -35,7 +35,7 @@ export default function CustomerDataPage({ params }: { params: { id: string } })
             <Card>
               <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
-                <CardDescription>Customer's personal details</CardDescription>
+                <CardDescription>Customer&apos;s personal details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
@@ -52,7 +52,7 @@ export default function CustomerDataPage({ params }: { params: { id: string } })
                 <div className="grid gap-2">
                   <div className="grid grid-cols-2">
                     <p className="text-sm font-medium">ID Type</p>
-                    <p className="text-sm">Driver's License</p>
+                    <p className="text-sm">Driver&apos;s License</p>
                   </div>
                   <div className="grid grid-cols-2">
                     <p className="text-sm font-medium">ID Number</p>
@@ -74,7 +74,7 @@ export default function CustomerDataPage({ params }: { params: { id: string } })
             <Card>
               <CardHeader>
                 <CardTitle>Rental History</CardTitle>
-                <CardDescription>Customer's rental activity</CardDescription>
+                <CardDescription>Customer&apos;s rental activity</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-2">

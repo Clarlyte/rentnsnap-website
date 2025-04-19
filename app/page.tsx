@@ -217,7 +217,7 @@ export default function Home() {
                   What Our <span className="text-gold-400">Clients Say</span>
                 </h2>
                 <p className="max-w-[900px] text-muted-foreground responsive-body">
-                  Hear from rental shop owners who transformed their business with Rent n' Snap
+                  Hear from rental shop owners who transformed their business with Rent n&apos; Snap
                 </p>
               </div>
             </div>
@@ -303,7 +303,7 @@ export default function Home() {
                       />
                     ))}
                   </div>
-                  <blockquote className="flex-1 text-muted-foreground">"{testimonial.quote}"</blockquote>
+                  <blockquote className="flex-1 text-muted-foreground">&ldquo;{testimonial.quote}&rdquo;</blockquote>
                 </div>
               ))}
             </div>
@@ -659,7 +659,7 @@ export default function Home() {
               <div className="flex items-center gap-2">
                 <Camera className="h-6 w-6 text-gold-400" />
                 <span className="text-xl font-bold">
-                  Rent n' <span className="text-gold-400">Snap</span>
+                  Rent n&apos; <span className="text-gold-400">Snap</span>
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
@@ -745,7 +745,7 @@ export default function Home() {
           <div className="mt-8 pt-8 border-t border-border/40">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <p className="text-sm text-muted-foreground text-center sm:text-left">
-                © {new Date().getFullYear()} Rent n' Snap. All rights reserved.
+                © {new Date().getFullYear()} Rent n&apos; Snap. All rights reserved.
               </p>
               <div className="flex items-center space-x-4">
                 <a href="#" className="text-sm text-muted-foreground hover:text-gold-400 transition-colors">

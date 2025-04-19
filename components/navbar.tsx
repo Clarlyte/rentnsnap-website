@@ -20,7 +20,7 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-gold-400 interactive-icon" />
           <span className="text-lg sm:text-xl font-bold">
-            Rent n' <span className="text-gold-400">Snap</span>
+            Rent n&apos; <span className="text-gold-400">Snap</span>
           </span>
         </div>
         <nav className="hidden md:flex gap-4 lg:gap-6">
